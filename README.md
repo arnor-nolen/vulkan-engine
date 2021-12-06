@@ -1,4 +1,4 @@
-## Vulkan tutorial
+## Vulkan engine
 
 Simple rendering engine using Vulkan that works cross-platform on Windows, Linux and MacOS. Uses C++20 standard features.
 
