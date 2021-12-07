@@ -1,5 +1,7 @@
 #pragma once
 #include "asset_loader.hpp"
+#include <lz4.h>
+#include <nlohmann/json.hpp>
 
 namespace assets {
 struct Vertex_f32_PNCV {
@@ -46,8 +48,12 @@ auto read_mesh_info(AssetFile *file) -> MeshInfo;
 void unpack_mesh(MeshInfo *info, const char *sourceBuffer, size_t sourceSize,
                  char *vertexBuffer, char *indexBuffer);
 
-auto pack_mesh(MeshInfo *info, char *vertexData, char *indexData) -> AssetFile;
+template <typename V>
+auto pack_mesh(MeshInfo *info, V *vertexData, std::uint32_t *indexData)
+    -> AssetFile;
 
 auto calcualate_bounds(Vertex_f32_PNCV *vertices, size_t count) -> MeshBounds;
 
 } // namespace assets
+
+#include "mesh_asset_impl.hpp"

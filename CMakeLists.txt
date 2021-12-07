@@ -10,14 +10,9 @@ project (vulkan-tutorial)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup(TARGETS)
 
-# Set standard used (c++20)
-set(TARGET_COMPILE_FEATURES cxx_std_20)
-
-# For clang-tidy checks
-# Check in c++17 mode, since c++20 is bugged, doesn't see c++17 std::filesystem, std::optional, etc.
-if(CMAKE_CXX_CLANG_TIDY)
-  set(CMAKE_CXX_CLANG_TIDY "${CMAKE_CXX_CLANG_TIDY};-extra-arg=/std:c++17")
-endif()
+# Set standard used (c++23)
+# Check in c++23 mode, since c++20 is bugged in clang-tidy, doesn't see c++17 std::filesystem, std::optional, etc.
+set(TARGET_COMPILE_FEATURES cxx_std_23)
 
 # -------------------------------------
 # Set compiler-specific stuff

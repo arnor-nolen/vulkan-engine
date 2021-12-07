@@ -13,7 +13,7 @@ auto vkutil::load_image_from_file(VulkanEngine &engine,
   int texWidth, texHeight, texChannels;
   stbi_uc *pixels = stbi_load(file.string().c_str(), &texWidth, &texHeight,
                               &texChannels, STBI_rgb_alpha);
-  if (!static_cast<bool>(pixels)) {
+  if (pixels == nullptr) {
     std::cout << "Failed to load texture file " << file << '\n';
     return false;
   }

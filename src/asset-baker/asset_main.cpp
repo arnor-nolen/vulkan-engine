@@ -4,6 +4,7 @@
 #include <chrono>
 #include <filesystem>
 #include <iostream>
+#include <span>
 #include <tiny_obj_loader.h>
 #include <vector>
 
@@ -72,7 +73,7 @@ void extract_mesh_from_obj(std::vector<tinyobj::shape_t> &shapes,
         tinyobj::real_t uy = attrib.texcoords[2 * idx.texcoord_index + 1];
 
         // Copy it into our vertex
-        V new_vert;
+        V new_vert{};
         pack_vertex(new_vert, vx, vy, vz, nx, ny, nz, ux, uy);
 
         _indices.push_back(static_cast<std::uint32_t>(_vertices.size()));
@@ -95,21 +96,17 @@ auto convert_mesh(const std::filesystem::path &input,
 
   // Error and warning output from the load function
   std::string err;
-  auto pngstart = std::chrono::high_resolution_clock::now();
+  auto pngstart = std::chrono::steady_clock::now();
 
   auto material_path = std::filesystem::path(input).remove_filename();
 
   // Load the OBJ file
   tinyobj::LoadObj(&attrib, &shapes, &materials, &err, input.string().c_str(),
                    material_path.string().c_str());
-  auto pngend = std::chrono::high_resolution_clock::now();
-  auto diff = pngend - pngstart;
+  auto pngend = std::chrono::steady_clock::now();
+  auto diff = std::chrono::floor<std::chrono::milliseconds>(pngend - pngstart);
 
-  std::cout
-      << "obj took "
-      << std::chrono::duration_cast<std::chrono::nanoseconds>(diff).count() /
-             1000000.0
-      << "ms" << '\n';
+  std::cout << "Obj took " << diff << '\n';
 
   // Make sure to output the errors to the console in case there are issues with
   // the file
@@ -135,20 +132,16 @@ auto convert_mesh(const std::filesystem::path &input,
   meshinfo.bounds =
       assets::calcualate_bounds(_vertices.data(), _vertices.size());
   // Pack mesh file
-  auto start = std::chrono::high_resolution_clock::now();
+  auto start = std::chrono::steady_clock::now();
 
-  assets::AssetFile newFile = assets::pack_mesh(
-      &meshinfo, (char *)_vertices.data(), (char *)_indices.data());
+  assets::AssetFile newFile =
+      assets::pack_mesh(&meshinfo, _vertices.data(), _indices.data());
 
-  auto end = std::chrono::high_resolution_clock::now();
+  auto end = std::chrono::steady_clock::now();
 
-  diff = end - start;
+  diff = std::chrono::floor<std::chrono::milliseconds>(end - start);
 
-  std::cout
-      << "compression took "
-      << std::chrono::duration_cast<std::chrono::nanoseconds>(diff).count() /
-             1000000.0
-      << "ms" << '\n';
+  std::cout << "Compression took " << diff << '\n';
 
   // Save to disk
   save_binaryfile(output.string().c_str(), newFile);
@@ -158,12 +151,14 @@ auto convert_mesh(const std::filesystem::path &input,
 
 auto convert_image(const std::filesystem::path &input,
                    const std::filesystem::path &output) {
-  int texWidth, texHeight, texChannels;
+  int texWidth;
+  int texHeight;
+  int texChannels;
 
   stbi_uc *pixels = stbi_load(input.string().c_str(), &texWidth, &texHeight,
                               &texChannels, STBI_rgb_alpha);
 
-  if (!pixels) {
+  if (pixels == nullptr) {
     std::cout << "Failed to load texture file " << input << '\n';
     return false;
   }
@@ -185,23 +180,22 @@ auto convert_image(const std::filesystem::path &input,
 }
 
 auto main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[]) -> int {
-  std::filesystem::path path{argv[1]};
-  std::filesystem::path directory = path;
+  auto args = std::span{argv, size_t(argc)};
+  std::filesystem::path path{args[1]};
 
-  std::cout << "Loading asset directory at " << directory << '\n';
+  std::cout << "Loading asset directory at " << path << '\n';
 
-  for (auto &&p : std::filesystem::directory_iterator(directory)) {
-    std::cout << "File: " << p;
+  for (auto &&p : std::filesystem::directory_iterator(path)) {
 
     if (p.path().extension() == ".png") {
-      std::cout << "found a texture" << '\n';
+      std::cout << "File: " << p << " found a texture" << '\n';
 
       auto newpath = p.path();
       newpath.replace_extension(".tx");
       convert_image(p.path(), newpath);
     }
     if (p.path().extension() == ".obj") {
-      std::cout << "found a mesh" << '\n';
+      std::cout << "File: " << p << " found a mesh" << '\n';
 
       auto newpath = p.path();
       newpath.replace_extension(".mesh");

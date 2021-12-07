@@ -7,8 +7,7 @@ Timer::~Timer() { stop(); }
 
 void Timer::stop() {
   auto end_time = std::chrono::steady_clock::now();
-  auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
-      end_time - start_time_);
-  const float ms_in_sec = 0.001F;
-  std::cout << str_ << duration.count() * ms_in_sec << " ms.\n";
+  auto duration =
+      std::chrono::floor<std::chrono::milliseconds>(end_time - start_time_);
+  std::cout << str_ << duration << '\n';
 }

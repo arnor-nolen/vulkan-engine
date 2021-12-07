@@ -4,12 +4,10 @@
 #include <nlohmann/json.hpp>
 
 auto parse_format(const char *f) -> assets::TextureFormat {
-
   if (strcmp(f, "RGBA8") == 0) {
     return assets::TextureFormat::RGBA8;
-  } else {
-    return assets::TextureFormat::Unknown;
   }
+  return assets::TextureFormat::Unknown;
 }
 
 auto assets::read_texture_info(AssetFile *file) -> TextureInfo {
@@ -63,7 +61,7 @@ auto assets::pack_texture(TextureInfo *info, void *pixelData) -> AssetFile {
 
   file.binaryBlob.resize(compressStaging);
   int compressedSize = LZ4_compress_default(
-      (const char *)pixelData, file.binaryBlob.data(),
+      static_cast<const char *>(pixelData), file.binaryBlob.data(),
       static_cast<int>(info->textureSize), compressStaging);
   file.binaryBlob.resize(compressedSize);
 

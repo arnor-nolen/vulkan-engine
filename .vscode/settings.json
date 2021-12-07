@@ -74,6 +74,9 @@
     "xlocbuf": "cpp",
     "xlocmes": "cpp",
     "xlocmon": "cpp",
-    "xloctime": "cpp"
+    "xloctime": "cpp",
+    "numeric": "cpp",
+    "valarray": "cpp",
+    "span": "cpp"
   }
 }
