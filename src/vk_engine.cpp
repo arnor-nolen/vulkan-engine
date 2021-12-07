@@ -6,7 +6,6 @@
 
 #include "vk_initializers.hpp"
 #include "vk_textures.hpp"
-#include "vk_types.hpp"
 
 #include "bindings/imgui_impl_sdl.h"
 #include "bindings/imgui_impl_vulkan.h"
@@ -646,6 +645,12 @@ void VulkanEngine::init_scene() {
 }
 
 void VulkanEngine::init_descriptors() {
+  _descriptorAllocator = new vkutil::DescriptorAllocator{};
+  _descriptorAllocator->init(_device);
+
+  _descriptorLayoutCache = new vkutil::DescriptorLayoutCache{};
+  _descriptorLayoutCache->init(_device);
+
   const size_t sceneParamBufferSize =
       _frames.size() * pad_uniform_buffer_size(sizeof(GPUSceneData));
   _sceneParameterBuffer =
@@ -689,7 +694,7 @@ void VulkanEngine::init_descriptors() {
   setInfo.flags = 0;
   setInfo.pBindings = bindings.data();
 
-  vkCreateDescriptorSetLayout(_device, &setInfo, nullptr, &_globalSetLayout);
+  _globalSetLayout = _descriptorLayoutCache->create_descriptor_layout(&setInfo);
 
   auto objectBind = vkinit::descriptorset_layout_binding(
       VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, VK_SHADER_STAGE_VERTEX_BIT, 0);
@@ -702,7 +707,8 @@ void VulkanEngine::init_descriptors() {
   set2info.flags = 0;
   set2info.pBindings = &objectBind;
 
-  vkCreateDescriptorSetLayout(_device, &set2info, nullptr, &_objectSetLayout);
+  _objectSetLayout =
+      _descriptorLayoutCache->create_descriptor_layout(&set2info);
 
   // Another set, one that holds a single texture
   auto textureBind = vkinit::descriptorset_layout_binding(
@@ -717,13 +723,10 @@ void VulkanEngine::init_descriptors() {
   set3info.flags = 0;
   set3info.pBindings = &textureBind;
 
-  vkCreateDescriptorSetLayout(_device, &set3info, nullptr,
-                              &_singleTextureSetLayout);
+  _singleTextureSetLayout =
+      _descriptorLayoutCache->create_descriptor_layout(&set3info);
 
   _mainDeletionQueue.push_function([=]() {
-    vkDestroyDescriptorSetLayout(_device, _singleTextureSetLayout, nullptr);
-    vkDestroyDescriptorSetLayout(_device, _objectSetLayout, nullptr);
-    vkDestroyDescriptorSetLayout(_device, _globalSetLayout, nullptr);
     vkDestroyDescriptorPool(_device, _descriptorPool, nullptr);
     vmaDestroyBuffer(_allocator, _sceneParameterBuffer._buffer,
                      _sceneParameterBuffer._allocation);
@@ -1151,6 +1154,9 @@ void VulkanEngine::cleanup() {
     ++_frameNumber;
 
     _mainDeletionQueue.flush();
+
+    _descriptorLayoutCache->cleanup();
+    _descriptorAllocator->cleanup();
 
     vmaDestroyAllocator(_allocator);
 

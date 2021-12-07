@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "vk_descriptors.hpp"
 #include "vk_mesh.hpp"
 #include "vk_types.hpp"
 #include <array>
@@ -10,6 +11,7 @@
 #include <unordered_map>
 #include <vector>
 #include <vk_mem_alloc.h>
+
 
 constexpr int window_w = 1700;
 constexpr int window_h = 900;
@@ -122,6 +124,9 @@ private:
   bool _isInitialized{false};
   int _frameNumber{0};
   int _selectedShader{0};
+
+  vkutil::DescriptorAllocator *_descriptorAllocator;
+  vkutil::DescriptorLayoutCache *_descriptorLayoutCache;
 
   VkExtent2D _windowExtent{window_w, window_h};
 
