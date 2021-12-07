@@ -27,11 +27,11 @@ auto assets::read_mesh_info(AssetFile *file) -> MeshInfo {
   auto boundsData = metadata["bounds"].get<std::vector<float>>();
 
   for (size_t i = 0; i != 3; ++i) {
-    info.bounds.origin[i] = boundsData.at(i);
-    info.bounds.extents[i] = boundsData.at(4 + i);
+    info.bounds.origin[i] = boundsData[i];
+    info.bounds.extents[i] = boundsData[4 + i];
   }
 
-  info.bounds.radius = boundsData.at(3);
+  info.bounds.radius = boundsData[3];
 
   return info;
 }
@@ -66,15 +66,15 @@ auto assets::calcualate_bounds(Vertex_f32_PNCV *vertices, size_t count)
 
   for (size_t i = 0; i != count; ++i) {
     for (size_t j = 0; j != 3; ++j) {
-      min.at(j) = std::min(min.at(j), vertices[i].position[j]);
-      max.at(j) = std::max(max.at(j), vertices[i].position[j]);
+      min[j] = std::min(min[j], vertices[i].position[j]);
+      max[j] = std::max(max[j], vertices[i].position[j]);
     }
   }
 
   MeshBounds bounds;
   for (size_t i = 0; i != 3; ++i) {
-    bounds.extents[i] = (max.at(i) - min.at(i)) / 2.0F;
-    bounds.origin[i] = bounds.extents[i] + min.at(i);
+    bounds.extents[i] = (max[i] - min[i]) / 2.0F;
+    bounds.origin[i] = bounds.extents[i] + min[i];
   }
 
   // Go through the vertices again to calculate the exact bounding sphere

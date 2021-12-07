@@ -1067,7 +1067,7 @@ void VulkanEngine::draw_objects(VkCommandBuffer cmd, RenderObject *first,
 }
 
 auto VulkanEngine::get_current_frame() -> FrameData & {
-  return _frames.at(_frameNumber % _frames.size());
+  return _frames[_frameNumber % _frames.size()];
 }
 
 auto VulkanEngine::create_buffer(size_t allocSize, VkBufferUsageFlags usage,
