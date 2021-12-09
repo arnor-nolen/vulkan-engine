@@ -19,6 +19,6 @@ struct PlayerCamera {
   void update_camera(float deltaSeconds);
 
   auto get_view_matrix() -> glm::mat4;
-  auto get_projection_matrix(bool bReverse = true) -> glm::mat4;
+  auto get_projection_matrix() -> glm::mat4;
   auto get_rotation_matrix() -> glm::mat4;
 };

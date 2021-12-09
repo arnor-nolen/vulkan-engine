@@ -99,10 +99,9 @@ auto PlayerCamera::get_view_matrix() -> glm::mat4 {
   return view;
 }
 
-auto PlayerCamera::get_projection_matrix(bool bReverse) -> glm::mat4 {
+auto PlayerCamera::get_projection_matrix() -> glm::mat4 {
   glm::mat4 pro =
-      glm::perspective(glm::radians(70.F), 1700.F / 900.F,
-                       bReverse ? 5000.F : 0.1F, bReverse ? 0.1F : 5000.F);
+      glm::perspective(glm::radians(70.F), 1700.F / 900.F, 0.1F, 5000.F);
   pro[1][1] *= -1;
   return pro;
 }

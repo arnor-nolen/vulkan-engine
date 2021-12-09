@@ -986,7 +986,7 @@ void VulkanEngine::draw_objects(VkCommandBuffer cmd, RenderObject *first,
   // Make a model view matrix for rendering the object
   // Camera view
   glm::mat4 view = _camera.get_view_matrix();
-  glm::mat4 projection = _camera.get_projection_matrix(false);
+  glm::mat4 projection = _camera.get_projection_matrix();
 
   // Fill a GPU camera data struct
   GPUCameraData camData = {

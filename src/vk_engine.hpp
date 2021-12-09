@@ -15,6 +15,7 @@
 constexpr int window_w = 1700;
 constexpr int window_h = 900;
 
+// Double buffering
 constexpr unsigned int FRAME_OVERLAP = 2;
 
 struct Texture {
