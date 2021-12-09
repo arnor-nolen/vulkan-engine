@@ -84,7 +84,7 @@ auto Mesh::load_from_meshasset(const std::filesystem::path &filename) -> bool {
   _vertices.clear();
   _indices.clear();
 
-  _indices.resize(indexBuffer.size() / sizeof(std::uint32_t));
+  _indices.resize(indexBuffer.size() / sizeof(uint32_t));
   for (int i = 0; i != _indices.size(); ++i) {
     uint32_t *unpacked_indices = (uint32_t *)indexBuffer.data();
     _indices[i] = unpacked_indices[i];

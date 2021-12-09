@@ -76,7 +76,7 @@ void extract_mesh_from_obj(std::vector<tinyobj::shape_t> &shapes,
         V new_vert{};
         pack_vertex(new_vert, vx, vy, vz, nx, ny, nz, ux, uy);
 
-        _indices.push_back(static_cast<std::uint32_t>(_vertices.size()));
+        _indices.push_back(static_cast<uint32_t>(_vertices.size()));
         _vertices.push_back(new_vert);
       }
       index_offset += fv;
@@ -118,15 +118,15 @@ auto convert_mesh(const std::filesystem::path &input,
   using VertexFormat = assets::Vertex_f32_PNCV;
 
   std::vector<VertexFormat> _vertices;
-  std::vector<std::uint32_t> _indices;
+  std::vector<uint32_t> _indices;
 
   extract_mesh_from_obj(shapes, attrib, _indices, _vertices);
 
   assets::MeshInfo meshinfo;
   meshinfo.vertexFormat = assets::VertexFormat::PNCV_F32;
   meshinfo.vertexBufferSize = _vertices.size() * sizeof(VertexFormat);
-  meshinfo.indexBufferSize = _indices.size() * sizeof(std::uint32_t);
-  meshinfo.indexSize = sizeof(std::uint32_t);
+  meshinfo.indexBufferSize = _indices.size() * sizeof(uint32_t);
+  meshinfo.indexSize = sizeof(uint32_t);
   meshinfo.originalFile = input.string();
 
   meshinfo.bounds =

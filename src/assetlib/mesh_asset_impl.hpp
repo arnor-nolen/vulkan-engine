@@ -3,7 +3,7 @@
 #include "mesh_asset.hpp"
 
 template <typename V>
-auto assets::pack_mesh(MeshInfo *info, V *vertexData, std::uint32_t *indexData)
+auto assets::pack_mesh(MeshInfo *info, V *vertexData, uint32_t *indexData)
     -> AssetFile {
   AssetFile file;
   file.type[0] = 'M';

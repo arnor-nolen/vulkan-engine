@@ -146,7 +146,7 @@ void VulkanEngine::init_imgui() {
   pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
   pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
   pool_info.maxSets = 1000;
-  pool_info.poolSizeCount = static_cast<std::uint32_t>(pool_sizes.size());
+  pool_info.poolSizeCount = static_cast<uint32_t>(pool_sizes.size());
   pool_info.pPoolSizes = pool_sizes.data();
 
   VkDescriptorPool imguiPool;
@@ -328,8 +328,7 @@ void VulkanEngine::init_default_renderpass() {
   render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
 
   // Connect the color attachment to the info
-  render_pass_info.attachmentCount =
-      static_cast<std::uint32_t>(attachments.size());
+  render_pass_info.attachmentCount = static_cast<uint32_t>(attachments.size());
   render_pass_info.pAttachments = attachments.data();
   // Connect the subpass to the info
   render_pass_info.subpassCount = 1;
@@ -356,17 +355,16 @@ void VulkanEngine::init_framebuffers() {
   fb_info.layers = 1;
 
   // Grab how many images we have in the swapchain
-  auto swapchain_imagecount =
-      static_cast<std::uint32_t>(_swapchainImages.size());
+  auto swapchain_imagecount = static_cast<uint32_t>(_swapchainImages.size());
   _framebuffers = std::vector<VkFramebuffer>(swapchain_imagecount);
 
   // Create framebuffers for each of the swapchain image views
-  for (std::uint32_t i = 0; i != swapchain_imagecount; ++i) {
+  for (uint32_t i = 0; i != swapchain_imagecount; ++i) {
     auto attachments =
         std::array<VkImageView, 2>{_swapchainImageViews[i], _depthImageView};
 
     fb_info.pAttachments = attachments.data();
-    fb_info.attachmentCount = static_cast<std::uint32_t>(attachments.size());
+    fb_info.attachmentCount = static_cast<uint32_t>(attachments.size());
     VK_CHECK(
         vkCreateFramebuffer(_device, &fb_info, nullptr, &_framebuffers[i]));
 
@@ -477,7 +475,7 @@ void VulkanEngine::init_pipelines() {
 
   // Hook the global set layout
   mesh_pipeline_layout_info.setLayoutCount =
-      static_cast<std::uint32_t>(setLayouts.size());
+      static_cast<uint32_t>(setLayouts.size());
   mesh_pipeline_layout_info.pSetLayouts = setLayouts.data();
 
   VkPipelineLayout meshPipelineLayout;
@@ -491,7 +489,7 @@ void VulkanEngine::init_pipelines() {
   auto texturedSetLayouts = std::array<VkDescriptorSetLayout, 3>{
       _globalSetLayout, _objectSetLayout, _singleTextureSetLayout};
   textured_pipeline_layout_info.setLayoutCount =
-      static_cast<std::uint32_t>(texturedSetLayouts.size());
+      static_cast<uint32_t>(texturedSetLayouts.size());
   textured_pipeline_layout_info.pSetLayouts = texturedSetLayouts.data();
 
   VkPipelineLayout texturedPipelineLayout;
@@ -544,12 +542,12 @@ void VulkanEngine::init_pipelines() {
   pipelineBuilder._vertexInputInfo.pVertexAttributeDescriptions =
       vertexDescription.attributes.data();
   pipelineBuilder._vertexInputInfo.vertexAttributeDescriptionCount =
-      static_cast<std::uint32_t>(vertexDescription.attributes.size());
+      static_cast<uint32_t>(vertexDescription.attributes.size());
 
   pipelineBuilder._vertexInputInfo.pVertexBindingDescriptions =
       vertexDescription.bindings.data();
   pipelineBuilder._vertexInputInfo.vertexBindingDescriptionCount =
-      static_cast<std::uint32_t>(vertexDescription.bindings.size());
+      static_cast<uint32_t>(vertexDescription.bindings.size());
 
   // Build the mesh triangle pipleine
   VkPipeline meshPipeline =
@@ -663,7 +661,7 @@ void VulkanEngine::init_descriptors() {
   pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
   pool_info.flags = 0;
   pool_info.maxSets = 10;
-  pool_info.poolSizeCount = static_cast<std::uint32_t>(sizes.size());
+  pool_info.poolSizeCount = static_cast<uint32_t>(sizes.size());
   pool_info.pPoolSizes = sizes.data();
 
   vkCreateDescriptorPool(_device, &pool_info, nullptr, &_descriptorPool);
@@ -685,7 +683,7 @@ void VulkanEngine::init_descriptors() {
   setInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
   setInfo.pNext = nullptr;
 
-  setInfo.bindingCount = static_cast<std::uint32_t>(bindings.size());
+  setInfo.bindingCount = static_cast<uint32_t>(bindings.size());
   setInfo.flags = 0;
   setInfo.pBindings = bindings.data();
 
@@ -798,8 +796,7 @@ void VulkanEngine::init_descriptors() {
     auto setWrites = std::array<VkWriteDescriptorSet, 3>{
         cameraWrite, sceneWrite, objectWrite};
 
-    vkUpdateDescriptorSets(_device,
-                           static_cast<std::uint32_t>(setWrites.size()),
+    vkUpdateDescriptorSets(_device, static_cast<uint32_t>(setWrites.size()),
                            setWrites.data(), 0, nullptr);
 
     _mainDeletionQueue.push_function([=]() {
@@ -922,14 +919,14 @@ auto VulkanEngine::load_shader_module(const std::filesystem::path &filePath,
 
   // SPIR-V expects the buffer to be on uint32, so make sure to reserve an
   // int vector big enough for the entire file
-  std::vector<std::uint32_t> buffer(fileSize / sizeof(std::uint32_t));
+  std::vector<uint32_t> buffer(fileSize / sizeof(uint32_t));
 
   // Put file cursor at the beginning
   file.seekg(0);
 
   // Load the entire file into the buffer
 
-  // I have no choice becase of SPIR-V only accepting std::uint32_t
+  // I have no choice becase of SPIR-V only accepting uint32_t
   // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
   file.read(reinterpret_cast<char *>(buffer.data()), fileSize);
 
@@ -942,7 +939,7 @@ auto VulkanEngine::load_shader_module(const std::filesystem::path &filePath,
   createInfo.pNext = nullptr;
 
   // codeSize has to be in bytes
-  createInfo.codeSize = buffer.size() * sizeof(std::uint32_t);
+  createInfo.codeSize = buffer.size() * sizeof(uint32_t);
   createInfo.pCode = buffer.data();
 
   // Check that the creation goes well
@@ -1025,7 +1022,7 @@ void VulkanEngine::draw_objects(VkCommandBuffer cmd, RenderObject *first,
       unsigned int frameIndex = _frameNumber % _frames.size();
 
       // Offset for our scene buffer
-      auto uniform_offset = static_cast<std::uint32_t>(
+      auto uniform_offset = static_cast<uint32_t>(
           pad_uniform_buffer_size(sizeof(GPUSceneData)) * frameIndex);
       // Bind the descriptor set when changing the pipeline
       vkCmdBindDescriptorSets(
@@ -1062,7 +1059,7 @@ void VulkanEngine::draw_objects(VkCommandBuffer cmd, RenderObject *first,
     }
     // We can draw now
     vkCmdDraw(cmd, static_cast<uint32_t>(object.mesh->_vertices.size()), 1, 0,
-              static_cast<std::uint32_t>(i));
+              static_cast<uint32_t>(i));
   }
 }
 
@@ -1178,7 +1175,7 @@ void VulkanEngine::draw() {
   VK_CHECK(vkResetCommandBuffer(get_current_frame()._mainCommandBuffer, 0));
 
   // Request image from the swapchain, one second timeout
-  std::uint32_t swapchainImageIndex;
+  uint32_t swapchainImageIndex;
   VK_CHECK(vkAcquireNextImageKHR(_device, _swapchain, 1000000000,
                                  get_current_frame()._presentSemaphore, 0,
                                  &swapchainImageIndex));
@@ -1223,7 +1220,7 @@ void VulkanEngine::draw() {
 
   // Connect clear values
   auto clearValues = std::array<VkClearValue, 2>{clearValue, depthClear};
-  rpInfo.clearValueCount = static_cast<std::uint32_t>(clearValues.size());
+  rpInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
   rpInfo.pClearValues = clearValues.data();
 
   vkCmdBeginRenderPass(cmd, &rpInfo, VK_SUBPASS_CONTENTS_INLINE);
@@ -1348,7 +1345,7 @@ auto PipelineBuilder::build_pipeline(VkDevice device, VkRenderPass pass)
   pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
   pipelineInfo.pNext = nullptr;
 
-  pipelineInfo.stageCount = static_cast<std::uint32_t>(_shaderStages.size());
+  pipelineInfo.stageCount = static_cast<uint32_t>(_shaderStages.size());
   pipelineInfo.pStages = _shaderStages.data();
   pipelineInfo.pVertexInputState = &_vertexInputInfo;
   pipelineInfo.pInputAssemblyState = &_inputAssembly;

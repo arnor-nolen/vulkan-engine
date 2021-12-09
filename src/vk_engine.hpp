@@ -140,8 +140,8 @@ private:
   // array of image-views from the swapchain
   std::vector<VkImageView> _swapchainImageViews;
 
-  VkQueue _graphicsQueue;             // Queue we will submit to
-  std::uint32_t _graphicsQueueFamily; // Family of the queue
+  VkQueue _graphicsQueue;        // Queue we will submit to
+  uint32_t _graphicsQueueFamily; // Family of the queue
 
   VkRenderPass _renderPass;
   std::vector<VkFramebuffer> _framebuffers;

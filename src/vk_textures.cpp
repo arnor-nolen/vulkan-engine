@@ -39,8 +39,8 @@ auto vkutil::load_image_from_file(VulkanEngine &engine,
   stbi_image_free(pixels);
 
   VkExtent3D imageExtent;
-  imageExtent.width = static_cast<std::uint32_t>(texWidth);
-  imageExtent.height = static_cast<std::uint32_t>(texHeight);
+  imageExtent.width = static_cast<uint32_t>(texWidth);
+  imageExtent.height = static_cast<uint32_t>(texHeight);
   imageExtent.depth = 1;
 
   VkImageCreateInfo dimg_info = vkinit::image_create_info(

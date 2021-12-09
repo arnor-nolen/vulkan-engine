@@ -6,17 +6,17 @@ auto assets::save_binaryfile(const std::filesystem::path &path,
   std::ofstream outfile;
   outfile.open(path, std::ios::binary | std::ios::out);
   outfile.write(file.type, 4);
-  std::uint32_t version = file.version;
+  uint32_t version = file.version;
   // Version
-  outfile.write((const char *)&version, sizeof(std::uint32_t));
+  outfile.write((const char *)&version, sizeof(uint32_t));
 
   // Json length
-  std::uint32_t length = static_cast<std::uint32_t>(file.json.size());
-  outfile.write((const char *)&length, sizeof(std::uint32_t));
+  uint32_t length = static_cast<uint32_t>(file.json.size());
+  outfile.write((const char *)&length, sizeof(uint32_t));
 
   // Blob length
-  std::uint32_t bloblength = static_cast<std::uint32_t>(file.binaryBlob.size());
-  outfile.write((const char *)&bloblength, sizeof(std::uint32_t));
+  uint32_t bloblength = static_cast<uint32_t>(file.binaryBlob.size());
+  outfile.write((const char *)&bloblength, sizeof(uint32_t));
 
   // Json stream
   outfile.write(file.json.data(), length);
@@ -41,13 +41,13 @@ auto assets::load_binaryfile(const std::filesystem::path &path,
   infile.seekg(0);
 
   infile.read(outputFile.type, 4);
-  infile.read((char *)&outputFile.version, sizeof(std::uint32_t));
+  infile.read((char *)&outputFile.version, sizeof(uint32_t));
 
-  std::uint32_t jsonlen = 0;
-  infile.read((char *)&jsonlen, sizeof(std::uint32_t));
+  uint32_t jsonlen = 0;
+  infile.read((char *)&jsonlen, sizeof(uint32_t));
 
-  std::uint32_t bloblen = 0;
-  infile.read((char *)&bloblen, sizeof(std::uint32_t));
+  uint32_t bloblen = 0;
+  infile.read((char *)&bloblen, sizeof(uint32_t));
 
   outputFile.json.resize(jsonlen);
   infile.read(outputFile.json.data(), jsonlen);

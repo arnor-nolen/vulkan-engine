@@ -16,8 +16,7 @@ auto vkinit::command_pool_create_info(uint32_t queueFamilyIndex,
 }
 
 // Allocate the command buffer that will be used for rendering
-auto vkinit::command_buffer_allocate_info(VkCommandPool pool,
-                                          std::uint32_t count,
+auto vkinit::command_buffer_allocate_info(VkCommandPool pool, uint32_t count,
                                           VkCommandBufferLevel level)
     -> VkCommandBufferAllocateInfo {
   VkCommandBufferAllocateInfo info = {};
@@ -315,8 +314,7 @@ auto vkinit::sampler_create_info(VkFilter filters,
 auto vkinit::write_descriptor_image(VkDescriptorType type,
                                     VkDescriptorSet dstSet,
                                     VkDescriptorImageInfo *imageInfo,
-                                    std::uint32_t binding)
-    -> VkWriteDescriptorSet {
+                                    uint32_t binding) -> VkWriteDescriptorSet {
   VkWriteDescriptorSet write = {};
   write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
   write.pNext = nullptr;

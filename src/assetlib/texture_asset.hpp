@@ -2,20 +2,20 @@
 #include "asset_loader.hpp"
 
 namespace assets {
-enum class TextureFormat : std::uint32_t { Unknown = 0, RGBA8 };
+enum class TextureFormat : uint32_t { Unknown = 0, RGBA8 };
 
 // struct PageInfo {
-//   std::uint32_t width;
-//   std::uint32_t height;
-//   std::uint32_t compressedSize;
-//   std::uint32_t originalSize;
+//   uint32_t width;
+//   uint32_t height;
+//   uint32_t compressedSize;
+//   uint32_t originalSize;
 // };
 
 struct TextureInfo {
   std::uint64_t textureSize;
   TextureFormat textureFormat;
   CompressionMode compressionMode;
-  std::uint32_t pixelsize[3];
+  uint32_t pixelsize[3];
   std::string originalFile;
 };
 

@@ -18,7 +18,7 @@ struct Vertex_P32N8C8V16 {
   float uv[2];
 };
 
-enum class VertexFormat : std::uint32_t {
+enum class VertexFormat : uint32_t {
   Unknown = 0,
   PNCV_F32,  // Everything at 32 bits
   P32N8C8V16 // Position at 32 bits, normal at 8 bits, color at 8 bits, uvs at
@@ -49,8 +49,7 @@ void unpack_mesh(MeshInfo *info, const char *sourceBuffer, size_t sourceSize,
                  char *vertexBuffer, char *indexBuffer);
 
 template <typename V>
-auto pack_mesh(MeshInfo *info, V *vertexData, std::uint32_t *indexData)
-    -> AssetFile;
+auto pack_mesh(MeshInfo *info, V *vertexData, uint32_t *indexData) -> AssetFile;
 
 auto calcualate_bounds(Vertex_f32_PNCV *vertices, size_t count) -> MeshBounds;
 

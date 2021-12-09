@@ -10,7 +10,7 @@ struct AssetFile {
   std::string json;
   std::vector<char> binaryBlob;
 };
-enum class CompressionMode : std::uint32_t { None, LZ4 };
+enum class CompressionMode : uint32_t { None, LZ4 };
 
 auto save_binaryfile(const std::filesystem::path &path, const AssetFile &file)
     -> bool;

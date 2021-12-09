@@ -33,7 +33,7 @@ struct RenderBounds {
 struct Mesh {
   // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
   std::vector<Vertex> _vertices;
-  std::vector<std::uint32_t> _indices;
+  std::vector<uint32_t> _indices;
   // NOLINTNEXTLINE(misc-non-private-member-variables-in-classes)
   AllocatedBuffer _vertexBuffer;
   AllocatedBuffer _indexBuffer;
