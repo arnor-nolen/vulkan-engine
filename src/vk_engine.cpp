@@ -46,6 +46,9 @@ void VulkanEngine::init() {
       SDL_WINDOWPOS_UNDEFINED, static_cast<int>(_windowExtent.width),
       static_cast<int>(_windowExtent.height), window_flags);
 
+  // Trap mouse inside the window
+  SDL_SetRelativeMouseMode(SDL_TRUE);
+
   // Initialization
   init_vulkan();
   init_swapchain();
@@ -62,6 +65,8 @@ void VulkanEngine::init() {
 
   // Everything went fine
   _isInitialized = true;
+
+  _camera = {.position = {0.F, 6.F, 5.F}};
 }
 
 void VulkanEngine::init_vulkan() {
@@ -980,12 +985,8 @@ void VulkanEngine::draw_objects(VkCommandBuffer cmd, RenderObject *first,
                                 size_t count) {
   // Make a model view matrix for rendering the object
   // Camera view
-  glm::vec3 camPos = {0.F, -6.F, -10.F};
-  glm::mat4 view = glm::translate(glm::mat4(1.F), camPos);
-
-  glm::mat4 projection =
-      glm::perspective(glm::radians(70.F), 1700.F / 900.F, 0.1F, 200.F);
-  projection[1][1] *= -1;
+  glm::mat4 view = _camera.get_view_matrix();
+  glm::mat4 projection = _camera.get_projection_matrix(false);
 
   // Fill a GPU camera data struct
   GPUCameraData camData = {
@@ -1282,21 +1283,25 @@ void VulkanEngine::run() {
   SDL_Event e;
   bool bQuit = false;
 
+  auto start = std::chrono::system_clock::now();
+  auto end = start;
+
   // Main loop
   while (!bQuit) {
+    end = std::chrono::system_clock::now();
+    std::chrono::duration<float> elapsed_seconds = end - start;
+    auto frametime = elapsed_seconds.count() * 1000.F;
+    start = std::chrono::system_clock::now();
+
     // Handle events on queue
     while (SDL_PollEvent(&e) != 0) {
       ImGui_ImplSDL2_ProcessEvent(&e);
+      _camera.process_input_event(&e);
       // Close the window when user alt-f4s or clicks the X button
       if (e.type == SDL_QUIT) {
         bQuit = true;
       } else if (e.type == SDL_KEYDOWN) {
-        if (e.key.keysym.sym == SDLK_SPACE) {
-          _selectedShader += 1;
-          if (_selectedShader > 1) {
-            _selectedShader = 0;
-          }
-        }
+        // Key handler
       }
     }
 
@@ -1307,7 +1312,9 @@ void VulkanEngine::run() {
     ImGui::NewFrame();
 
     // ImGui commands
-    ImGui::ShowDemoWindow();
+    // ImGui::ShowDemoWindow();
+
+    _camera.update_camera(frametime);
 
     draw();
   }

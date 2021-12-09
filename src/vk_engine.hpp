@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+#include "player_camera.hpp"
 #include "vk_mesh.hpp"
 #include "vk_types.hpp"
 #include <array>
@@ -121,8 +122,6 @@ private:
   // Members, all are public in Tutorial
   bool _isInitialized{false};
   int _frameNumber{0};
-  int _selectedShader{0};
-
   VkExtent2D _windowExtent{window_w, window_h};
 
   struct SDL_Window *_window{nullptr};
@@ -177,6 +176,8 @@ private:
   UploadContext _uploadContext;
 
   std::unordered_map<std::string, Texture> _loadedTextures;
+
+  PlayerCamera _camera;
 
   // Functions
   void init_vulkan();
