@@ -80,7 +80,7 @@ auto assets::calcualate_bounds(Vertex_f32_PNCV *vertices, size_t count)
   // Go through the vertices again to calculate the exact bounding sphere
   // radius
   float r2 = 0;
-  for (int i = 0; i != count; ++i) {
+  for (size_t i = 0; i != count; ++i) {
     auto offset =
         std::array<float, 3>{vertices[i].position[0] - bounds.origin[0],
                              vertices[i].position[1] - bounds.origin[1],

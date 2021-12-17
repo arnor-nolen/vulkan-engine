@@ -17,12 +17,11 @@
 #include <cstdint>
 #include <fstream>
 #include <iostream>
+#include <numeric>
 
 #include "vma_implementation.hpp"
 
-// we want to immediately abort when there is an error. In normal engines this
-// would give an error message to the user, or perform a dump of state.
-// NOLINTNEXTLINE(cppcoreguidelines-macro-usage)
+// We want to immediately abort when there is an error
 #define VK_CHECK(x)                                                            \
   do {                                                                         \
     VkResult err = x;                                                          \
@@ -816,6 +815,11 @@ void VulkanEngine::init_descriptors() {
 void VulkanEngine::load_meshes() {
   Mesh lostEmpire{};
   {
+    const std::string format_str = "Log entry #";
+    for (int i = 0; i != 100; ++i) {
+      _logger.dump(format_str + std::to_string(i));
+    }
+
     Timer timer("Loading mesh took ");
 
     lostEmpire.load_from_meshasset("./assets/lost_empire.mesh");
@@ -1313,6 +1317,23 @@ void VulkanEngine::run() {
 
     // ImGui commands
     // ImGui::ShowDemoWindow();
+
+    // Render console window at a fixed position (top-left corner)
+    ImVec2 model_window_pos = ImVec2(0, 0);
+    ImVec2 model_window_size = ImVec2(520, 540);
+
+    ImGui::SetNextWindowPos(model_window_pos);
+    ImGui::SetNextWindowSize(model_window_size);
+
+    ImGui::Begin("Console", NULL,
+                 ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
+                     ImGuiWindowFlags_NoMove);
+
+    for (auto logs = _logger.get_logs(); auto &&log : logs) {
+      ImGui::TextUnformatted(log.c_str());
+    }
+
+    ImGui::End();
 
     _camera.update_camera(frametime);
 

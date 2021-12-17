@@ -77,6 +77,7 @@
     "xloctime": "cpp",
     "numeric": "cpp",
     "valarray": "cpp",
-    "span": "cpp"
+    "span": "cpp",
+    "cstdarg": "cpp"
   }
 }

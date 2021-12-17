@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "player_camera.hpp"
+#include "utils/logger.hpp"
 #include "vk_mesh.hpp"
 #include "vk_types.hpp"
 #include <array>
@@ -101,6 +102,8 @@ public:
   DeletionQueue _mainDeletionQueue;
 
   VkDevice _device; // Vulkan device for commands
+
+  Logger _logger{};
 
   // initializes everything in the engine
   void init();

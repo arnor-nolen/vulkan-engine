@@ -1,6 +1,8 @@
 # Baked assets
 *.tx
 *.mesh
+output.log
+imgui.ini
 
 # ImGui bindings, get installed with Conan
 /src/bindings

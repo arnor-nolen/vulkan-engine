@@ -1,18 +1,34 @@
 ﻿cmake_minimum_required (VERSION 3.16)
-project (vulkan-tutorial)
+project (vulkan-engine)
 
 # Additional options
 #
 # Prevent command line window from spawning
 # ENABLE_CMD_WINDOW=OFF
 
-# Setting up Conan dependencies
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup(TARGETS)
+# Add to find cmake config dependencies 
+list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
 
-# Set standard used (c++23)
-# Check in c++23 mode, since c++20 is bugged in clang-tidy, doesn't see c++17 std::filesystem, std::optional, etc.
-set(TARGET_COMPILE_FEATURES cxx_std_23)
+# Adding Vulkan SDK
+find_package(Vulkan REQUIRED)
+
+# Setting up dependencies (using CONFIG so find_package doesn't conflict with cmake's own findX.cmake)
+find_package(glm REQUIRED CONFIG)
+find_package(sdl REQUIRED CONFIG)
+find_package(imgui REQUIRED CONFIG)
+find_package(stb REQUIRED CONFIG)
+find_package(tinyobjloader REQUIRED CONFIG)
+find_package(vk-bootstrap REQUIRED CONFIG)
+find_package(VulkanHeaders REQUIRED CONFIG)
+find_package(vulkan-memory-allocator REQUIRED CONFIG)
+find_package(volk REQUIRED CONFIG)
+find_package(lz4 REQUIRED CONFIG)
+find_package(nlohmann_json REQUIRED CONFIG)
+find_package(spdlog REQUIRED CONFIG)
+
+
+# Set standard (C++20)
+set(TARGET_COMPILE_FEATURES cxx_std_20)
 
 # -------------------------------------
 # Set compiler-specific stuff
@@ -28,13 +44,11 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
 
-  # -fvisibility=hidden for external libraries
-  add_compile_options(-Wall -Wextra -Wpedantic -Wshadow -fvisibility=hidden)
+  add_compile_options(-Wall -Wextra -Wpedantic -Wshadow)
 
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
-  # -fvisibility=hidden for external libraries
-  add_compile_options(-Wall -Wextra -Wpedantic -Wshadow -fvisibility=hidden)
+  add_compile_options(-Wall -Wextra -Wpedantic -Wshadow)
 
 else()
 
@@ -49,12 +63,11 @@ endif()
 # Building executables 
 # -------------------------------------
 
-
 # Build ImGui bindings
 file(GLOB_RECURSE SOURCE_FILES "src/bindings/*.cpp")
 add_library(imgui_lib OBJECT ${SOURCE_FILES})
 target_compile_features(imgui_lib PUBLIC ${TARGET_COMPILE_FEATURES})
-target_link_libraries(imgui_lib ${CONAN_TARGETS})
+target_link_libraries(imgui_lib imgui::imgui SDL2 Vulkan::Headers)
 # Disable clang-tidy for imgui_lib
 set_target_properties(imgui_lib PROPERTIES CXX_CLANG_TIDY "")
 
@@ -63,13 +76,13 @@ set_target_properties(imgui_lib PROPERTIES CXX_CLANG_TIDY "")
 file(GLOB_RECURSE SOURCE_FILES "src/assetlib/*.cpp")
 add_library(asset_lib STATIC ${SOURCE_FILES})
 target_compile_features(asset_lib PUBLIC ${TARGET_COMPILE_FEATURES})
-target_link_libraries(asset_lib ${CONAN_TARGETS})
+target_link_libraries(asset_lib lz4::lz4 nlohmann_json::nlohmann_json)
 
 # Build asset_baker
 file(GLOB_RECURSE SOURCE_FILES "src/asset-baker/*.cpp")
 add_executable(asset_baker ${SOURCE_FILES})
 target_compile_features(asset_baker PUBLIC ${TARGET_COMPILE_FEATURES})
-target_link_libraries(asset_baker ${CONAN_TARGETS} asset_lib)
+target_link_libraries(asset_baker asset_lib stb::stb tinyobjloader::tinyobjloader)
 
 # Build the main app 
 file(GLOB_RECURSE SOURCE_FILES "src/*.cpp")
@@ -88,8 +101,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC src)
 # -------------------------------------
 # Compiling shaders for Vulkan 
 # -------------------------------------
-find_package(Vulkan REQUIRED)
-
 find_program(GLSL_VALIDATOR glslangValidator HINTS /usr/bin /usr/local/bin $ENV{VULKAN_SDK}/Bin/ $ENV{VULKAN_SDK}/Bin32/)
 
 ## find all the shader files under the shaders folder
@@ -123,7 +134,7 @@ add_custom_target(
 # -------------------------------------
 
 # Link libraries
-target_link_libraries(${PROJECT_NAME} ${CONAN_TARGETS} asset_lib imgui_lib Vulkan::Vulkan)
+target_link_libraries(${PROJECT_NAME} asset_lib imgui_lib Vulkan::Vulkan vulkan-memory-allocator::vulkan-memory-allocator glm::glm spdlog::spdlog vk-bootstrap::vk-bootstrap stb::stb tinyobjloader::tinyobjloader)
 
 # Add shaders check
 add_dependencies(${PROJECT_NAME} Shaders)

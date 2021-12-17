@@ -85,7 +85,7 @@ auto Mesh::load_from_meshasset(const std::filesystem::path &filename) -> bool {
   _indices.clear();
 
   _indices.resize(indexBuffer.size() / sizeof(uint32_t));
-  for (int i = 0; i != _indices.size(); ++i) {
+  for (size_t i = 0; i != _indices.size(); ++i) {
     uint32_t *unpacked_indices = (uint32_t *)indexBuffer.data();
     _indices[i] = unpacked_indices[i];
   }
@@ -96,7 +96,7 @@ auto Mesh::load_from_meshasset(const std::filesystem::path &filename) -> bool {
 
     _vertices.resize(vertexBuffer.size() / sizeof(assets::Vertex_f32_PNCV));
 
-    for (int i = 0; i != _vertices.size(); ++i) {
+    for (size_t i = 0; i != _vertices.size(); ++i) {
 
       _vertices[i].position.x = unpackedVertices[i].position[0];
       _vertices[i].position.y = unpackedVertices[i].position[1];
@@ -119,7 +119,7 @@ auto Mesh::load_from_meshasset(const std::filesystem::path &filename) -> bool {
 
     _vertices.resize(vertexBuffer.size() / sizeof(assets::Vertex_P32N8C8V16));
 
-    for (int i = 0; i < _vertices.size(); i++) {
+    for (size_t i = 0; i < _vertices.size(); i++) {
       _vertices[i].position = {unpackedVertices[i].position[0],
                                unpackedVertices[i].position[1],
                                unpackedVertices[i].position[2]};
