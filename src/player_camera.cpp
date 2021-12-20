@@ -7,25 +7,25 @@ void PlayerCamera::process_input_event(SDL_Event *ev) {
     switch (ev->key.keysym.sym) {
     case SDLK_UP:
     case SDLK_w:
-      inputAxis.x -= 1.f;
+      inputAxis.x -= 1.F;
       break;
     case SDLK_DOWN:
     case SDLK_s:
-      inputAxis.x += 1.f;
+      inputAxis.x += 1.F;
       break;
     case SDLK_LEFT:
     case SDLK_a:
-      inputAxis.y -= 1.f;
+      inputAxis.y -= 1.F;
       break;
     case SDLK_RIGHT:
     case SDLK_d:
-      inputAxis.y += 1.f;
+      inputAxis.y += 1.F;
       break;
     case SDLK_LCTRL:
-      inputAxis.z -= 1.f;
+      inputAxis.z -= 1.F;
       break;
     case SDLK_SPACE:
-      inputAxis.z += 1.f;
+      inputAxis.z += 1.F;
       break;
     case SDLK_LSHIFT:
       bSprint = true;
@@ -35,25 +35,25 @@ void PlayerCamera::process_input_event(SDL_Event *ev) {
     switch (ev->key.keysym.sym) {
     case SDLK_UP:
     case SDLK_w:
-      inputAxis.x += 1.f;
+      inputAxis.x += 1.F;
       break;
     case SDLK_DOWN:
     case SDLK_s:
-      inputAxis.x -= 1.f;
+      inputAxis.x -= 1.F;
       break;
     case SDLK_LEFT:
     case SDLK_a:
-      inputAxis.y += 1.f;
+      inputAxis.y += 1.F;
       break;
     case SDLK_RIGHT:
     case SDLK_d:
-      inputAxis.y -= 1.f;
+      inputAxis.y -= 1.F;
       break;
     case SDLK_LCTRL:
-      inputAxis.z += 1.f;
+      inputAxis.z += 1.F;
       break;
     case SDLK_SPACE:
-      inputAxis.z -= 1.f;
+      inputAxis.z -= 1.F;
       break;
     case SDLK_LSHIFT:
       bSprint = false;

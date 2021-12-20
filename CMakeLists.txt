@@ -6,6 +6,11 @@ project (vulkan-engine)
 # Prevent command line window from spawning
 # ENABLE_CMD_WINDOW=OFF
 
+# Set binary output directories
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/$<0:>)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/$<0:>)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/$<0:>)
+
 # Add to find cmake config dependencies 
 list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
 

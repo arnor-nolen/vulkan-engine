@@ -1,5 +1,8 @@
 #pragma once
 
+// For SDL, since it's dumb and uses memcpy without import
+#include <string>
+
 #include "vk_types.hpp"
 #include <SDL_events.h>
 #include <glm/glm.hpp>
