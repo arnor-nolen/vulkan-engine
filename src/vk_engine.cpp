@@ -22,14 +22,12 @@
 #include "vma_implementation.hpp"
 
 // We want to immediately abort when there is an error
-#define VK_CHECK(x)                                                            \
-  do {                                                                         \
-    VkResult err = x;                                                          \
-    if (err) {                                                                 \
-      std::cout << "Detected Vulkan error: " << err << std::endl;              \
-      abort();                                                                 \
-    }                                                                          \
-  } while (0)
+constexpr void VK_CHECK(VkResult err) {
+  if (err != 0) {
+    std::cout << "Detected Vulkan error: " << err << '\n';
+    abort();
+  }
+}
 
 void VulkanEngine::init() {
   // We initialize SDL and create a window with it.
