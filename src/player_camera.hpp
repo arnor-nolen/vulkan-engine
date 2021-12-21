@@ -1,6 +1,6 @@
 #pragma once
 
-// For SDL, since it's dumb and uses memcpy without import
+// For SDL, since it's dumb and uses memcpy without including
 #include <string>
 
 #include "vk_types.hpp"
