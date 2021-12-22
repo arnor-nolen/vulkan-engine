@@ -73,10 +73,11 @@ void VulkanEngine::init_vulkan() {
   auto inst_ret = builder.set_app_name("Example Vulkan Application")
                       .request_validation_layers(true)
                       // Use 1.1 for MacOS
-                      .require_api_version(1, 2, 0)
+                      .require_api_version(1, 1, 0)
                       .use_default_debug_messenger()
-                      // For MacOS
-                      // .enable_extension("VK_MVK_macos_surface")
+                      // For MacOS (deprecated API, see
+                      // https://github.com/libsdl-org/SDL/issues/3906)
+                      .enable_extension("VK_MVK_macos_surface")
                       .build();
   vkb::Instance vkb_inst = inst_ret.value();
 
@@ -87,25 +88,26 @@ void VulkanEngine::init_vulkan() {
   SDL_Vulkan_CreateSurface(_window, _instance, &_surface);
 
   // Use vkbootstrap to select a GPU.
-  // We want a GPU that can write to the SDL surface and supports Vulkan 1.2
+  // We want a GPU that can write to the SDL surface and supports Vulkan 1.1
   vkb::PhysicalDeviceSelector selector{vkb_inst};
-  vkb::PhysicalDevice physicalDevice = selector
-                                           // Use 1.1 for MacOS
-                                           .set_minimum_version(1, 2)
-                                           .set_surface(_surface)
-                                           .select()
-                                           .value();
+  vkb::PhysicalDevice physicalDevice =
+      selector
+          // Use 1.1 for MacOS
+          .set_minimum_version(1, 1)
+          .set_surface(_surface)
+          .add_desired_extension("VK_KHR_portability_subset")
+          .select()
+          .value();
 
   // Used for gl_BaseInstance in shader code
-  VkPhysicalDeviceVulkan11Features vk11features = {};
-  vk11features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
-  vk11features.pNext = nullptr;
+  // VkPhysicalDeviceVulkan11Features vk11features = {};
+  // vk11features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+  // vk11features.pNext = nullptr;
 
-  vk11features.shaderDrawParameters = VK_TRUE;
+  // vk11features.shaderDrawParameters = VK_TRUE;
   // Create the final Vulkan device
   vkb::DeviceBuilder deviceBuilder{physicalDevice};
-  vkb::Device vkbDevice =
-      deviceBuilder.add_pNext(&vk11features).build().value();
+  vkb::Device vkbDevice = deviceBuilder.build().value();
 
   // Get the VkDevice handle used in the rest of a Vulkan application
   _device = vkbDevice.device;
