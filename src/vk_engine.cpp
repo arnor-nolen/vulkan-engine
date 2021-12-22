@@ -72,14 +72,17 @@ void VulkanEngine::init_vulkan() {
   // Make the Vulkan instance, with basic debug features
   auto inst_ret = builder.set_app_name("Example Vulkan Application")
                       .request_validation_layers(true)
-                      // Use 1.1 for MacOS
+                      // Use 1.1 because MacOS doesn't yet have 1.2
                       .require_api_version(1, 1, 0)
-                      .use_default_debug_messenger()
-                      // For MacOS (deprecated API, see
-                      // https://github.com/libsdl-org/SDL/issues/3906)
-                      .enable_extension("VK_MVK_macos_surface")
-                      .build();
-  vkb::Instance vkb_inst = inst_ret.value();
+                      .use_default_debug_messenger();
+
+// For MacOS (SDL uses deprecated API, see
+// https://github.com/libsdl-org/SDL/issues/3906)
+#ifdef __APPLE__
+  inst_ret = inst_ret.enable_extension("VK_MVK_macos_surface");
+#endif
+
+  vkb::Instance vkb_inst = inst_ret.build().value();
 
   _instance = vkb_inst.instance;
   _debug_messenger = vkb_inst.debug_messenger;
@@ -92,7 +95,7 @@ void VulkanEngine::init_vulkan() {
   vkb::PhysicalDeviceSelector selector{vkb_inst};
   vkb::PhysicalDevice physicalDevice =
       selector
-          // Use 1.1 for MacOS
+          // Use 1.1 because MacOS doesn't yet have 1.2
           .set_minimum_version(1, 1)
           .set_surface(_surface)
           .add_desired_extension("VK_KHR_portability_subset")
