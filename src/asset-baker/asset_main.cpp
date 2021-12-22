@@ -106,7 +106,7 @@ auto convert_mesh(const std::filesystem::path &input,
   auto pngend = std::chrono::steady_clock::now();
   auto diff = std::chrono::floor<std::chrono::milliseconds>(pngend - pngstart);
 
-  std::cout << "Obj took " << diff << '\n';
+  std::cout << "Obj took " << diff.count() << "ms" << '\n';
 
   // Make sure to output the errors to the console in case there are issues with
   // the file
@@ -141,7 +141,7 @@ auto convert_mesh(const std::filesystem::path &input,
 
   diff = std::chrono::floor<std::chrono::milliseconds>(end - start);
 
-  std::cout << "Compression took " << diff << '\n';
+  std::cout << "Compression took " << diff.count() << "ms" << '\n';
 
   // Save to disk
   save_binaryfile(output.string().c_str(), newFile);
@@ -188,14 +188,14 @@ auto main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[]) -> int {
   for (auto &&p : std::filesystem::directory_iterator(path)) {
 
     if (p.path().extension() == ".png") {
-      std::cout << "File: " << p << " found a texture" << '\n';
+      std::cout << "File: " << p.path() << " found a texture" << '\n';
 
       auto newpath = p.path();
       newpath.replace_extension(".tx");
       convert_image(p.path(), newpath);
     }
     if (p.path().extension() == ".obj") {
-      std::cout << "File: " << p << " found a mesh" << '\n';
+      std::cout << "File: " << p.path() << " found a mesh" << '\n';
 
       auto newpath = p.path();
       newpath.replace_extension(".mesh");

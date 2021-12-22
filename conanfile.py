@@ -15,7 +15,7 @@ class VulkanTutorialConan(ConanFile):
         "volk/1.2.195",
         "lz4/1.9.3",
         "nlohmann_json/3.10.4",
-        "spdlog/1.9.2"
+        "spdlog/1.8.5" # Any version >= 1.9.0 crashes on MacOS (see https://github.com/conan-io/conan-center-index/issues/8480)
     )
     generators = "CMakeDeps"
     default_options = {

@@ -1,4 +1,4 @@
-﻿cmake_minimum_required (VERSION 3.16)
+﻿cmake_minimum_required (VERSION 3.21)
 project (vulkan-engine)
 
 # Additional options
@@ -24,7 +24,6 @@ find_package(imgui REQUIRED CONFIG)
 find_package(stb REQUIRED CONFIG)
 find_package(tinyobjloader REQUIRED CONFIG)
 find_package(vk-bootstrap REQUIRED CONFIG)
-find_package(VulkanHeaders REQUIRED CONFIG)
 find_package(vulkan-memory-allocator REQUIRED CONFIG)
 find_package(volk REQUIRED CONFIG)
 find_package(lz4 REQUIRED CONFIG)
