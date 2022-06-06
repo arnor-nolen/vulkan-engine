@@ -420,7 +420,6 @@ void VulkanEngine::init_sync_structures() {
 void VulkanEngine::init_pipelines() {
   VkShaderModule vertexShader;
   VkShaderModule texturedMeshShader;
-  VkShaderModule colorMeshShader;
 
   // Compile shaders
   {
@@ -439,32 +438,15 @@ void VulkanEngine::init_pipelines() {
     } else {
       std::cout << "Textured mesh shader successfully loaded" << '\n';
     }
-
-    // Compile colored shader
-    if (!load_shader_module("./shaders/default_lit.frag.spv",
-                            &colorMeshShader)) {
-      std::cout << "Error when building the colored fragment shader module"
-                << '\n';
-    } else {
-      std::cout << "Triangle fragment shader successfully loaded" << '\n';
-    }
   }
 
   // Build the stage-create-info for both vertex and fragment stages. This
   // lets the pieline know the shader modules per stage
   PipelineBuilder pipelineBuilder;
 
-  pipelineBuilder._shaderStages.push_back(
-      // NOLINTNEXTLINE(clang-analyzer-core.CallAndMessage)
-      vkinit::pipeline_shader_stage_create_info(VK_SHADER_STAGE_VERTEX_BIT,
-                                                vertexShader));
-  pipelineBuilder._shaderStages.push_back(
-      vkinit::pipeline_shader_stage_create_info(VK_SHADER_STAGE_FRAGMENT_BIT,
-                                                colorMeshShader));
-
   // Build the pipeline layout that controls the inputs/outputs of the
   // shader
-  auto mesh_pipeline_layout_info = vkinit::pipeline_layout_create_info();
+  auto textured_pipeline_layout_info = vkinit::pipeline_layout_create_info();
 
   // Setup push constants
   VkPushConstantRange push_constant;
@@ -474,23 +456,16 @@ void VulkanEngine::init_pipelines() {
   push_constant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
   // Push constant setup
-  mesh_pipeline_layout_info.pPushConstantRanges = &push_constant;
-  mesh_pipeline_layout_info.pushConstantRangeCount = 1;
+  textured_pipeline_layout_info.pPushConstantRanges = &push_constant;
+  textured_pipeline_layout_info.pushConstantRangeCount = 1;
 
   std::array<VkDescriptorSetLayout, 2> setLayouts = {_globalSetLayout,
                                                      _objectSetLayout};
 
   // Hook the global set layout
-  mesh_pipeline_layout_info.setLayoutCount =
+  textured_pipeline_layout_info.setLayoutCount =
       static_cast<uint32_t>(setLayouts.size());
-  mesh_pipeline_layout_info.pSetLayouts = setLayouts.data();
-
-  VkPipelineLayout meshPipelineLayout;
-  VK_CHECK(vkCreatePipelineLayout(_device, &mesh_pipeline_layout_info, nullptr,
-                                  &meshPipelineLayout));
-
-  // Hook the push constants layout
-  pipelineBuilder._pipelineLayout = meshPipelineLayout;
+  textured_pipeline_layout_info.pSetLayouts = setLayouts.data();
 
   // Vertex input controls how to read vertices from vertex buffers. We
   // aren't using it yet.
@@ -542,18 +517,7 @@ void VulkanEngine::init_pipelines() {
   pipelineBuilder._vertexInputInfo.vertexBindingDescriptionCount =
       static_cast<uint32_t>(vertexDescription.bindings.size());
 
-  // Build the mesh triangle pipleine
-  VkPipeline meshPipeline =
-      pipelineBuilder.build_pipeline(_device, _renderPass);
-
-  create_material(meshPipeline, meshPipelineLayout, "defaultMesh");
-
-  // -------------------------------------------------------------------------
-  // Textured layout
-  // -------------------------------------------------------------------------
-
   // Create pipeline for textured drawing
-  pipelineBuilder._shaderStages.clear();
   pipelineBuilder._shaderStages.push_back(
       vkinit::pipeline_shader_stage_create_info(VK_SHADER_STAGE_VERTEX_BIT,
                                                 vertexShader));
@@ -563,8 +527,6 @@ void VulkanEngine::init_pipelines() {
 
   // Create pipeline layout for the textured mesh, which has 3 descriptor sets
   // We start from the normal mesh layout
-  auto textured_pipeline_layout_info = mesh_pipeline_layout_info;
-
   auto texturedSetLayouts = std::array<VkDescriptorSetLayout, 3>{
       _globalSetLayout, _objectSetLayout, _singleTextureSetLayout};
   textured_pipeline_layout_info.setLayoutCount =
@@ -577,20 +539,18 @@ void VulkanEngine::init_pipelines() {
 
   pipelineBuilder._pipelineLayout = texturedPipelineLayout;
   VkPipeline texPipeline = pipelineBuilder.build_pipeline(_device, _renderPass);
+
   create_material(texPipeline, texturedPipelineLayout, "terrain");
   create_material(texPipeline, texturedPipelineLayout, "character");
 
   // Destroy all shader modules, outside of the queue
-  vkDestroyShaderModule(_device, colorMeshShader, nullptr);
   vkDestroyShaderModule(_device, vertexShader, nullptr);
   vkDestroyShaderModule(_device, texturedMeshShader, nullptr);
 
   _mainDeletionQueue.push_function([=]() {
     vkDestroyPipeline(_device, texPipeline, nullptr);
-    vkDestroyPipeline(_device, meshPipeline, nullptr);
 
     vkDestroyPipelineLayout(_device, texturedPipelineLayout, nullptr);
-    vkDestroyPipelineLayout(_device, meshPipelineLayout, nullptr);
   });
 }
 
@@ -620,10 +580,11 @@ void VulkanEngine::init_scene() {
   vkAllocateDescriptorSets(_device, &allocInfo, &characterMat->textureSet);
 
   // Write to the descriptor set so that it points to our diffuse texture
-  VkDescriptorImageInfo terrainIBI;
-  terrainIBI.sampler = blockySampler;
-  terrainIBI.imageView = _loadedTextures["terrain_diffuse"].imageView;
-  terrainIBI.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  VkDescriptorImageInfo terrainIBI = {
+      .sampler = blockySampler,
+      .imageView = _loadedTextures["terrain_diffuse"].imageView,
+      .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+  };
 
   auto terrain_texture =
       vkinit::write_descriptor_image(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
@@ -639,10 +600,11 @@ void VulkanEngine::init_scene() {
   _renderables.push_back(terrain);
 
   // Write to the descriptor set so that it points to our diffuse texture
-  VkDescriptorImageInfo characterIBI;
-  characterIBI.sampler = blockySampler;
-  characterIBI.imageView = _loadedTextures["character_diffuse"].imageView;
-  characterIBI.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  VkDescriptorImageInfo characterIBI = {
+      .sampler = blockySampler,
+      .imageView = _loadedTextures["character_diffuse"].imageView,
+      .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+  };
 
   auto character_texture = vkinit::write_descriptor_image(
       VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, characterMat->textureSet,
