@@ -181,7 +181,7 @@ auto convert_image(const std::filesystem::path &input,
 
 auto main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[]) -> int {
   auto args = std::span{argv, size_t(argc)};
-  std::filesystem::path path{args[1]};
+  auto path = std::filesystem::path{argc < 2 ? "./assets" : args[1]};
 
   std::cout << "Loading asset directory at " << path << '\n';
 

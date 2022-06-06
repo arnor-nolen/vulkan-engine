@@ -78,6 +78,13 @@
     "numeric": "cpp",
     "valarray": "cpp",
     "span": "cpp",
-    "cstdarg": "cpp"
+    "cstdarg": "cpp",
+    "codecvt": "cpp",
+    "set": "cpp",
+    "unordered_set": "cpp"
+  },
+  "cmake.configureSettings": {
+    "CMAKE_CXX_CLANG_TIDY": "",
+    "ENABLE_CMD_WINDOW": "ON"
   }
 }

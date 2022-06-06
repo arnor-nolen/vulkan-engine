@@ -418,57 +418,57 @@ void VulkanEngine::init_sync_structures() {
 }
 
 void VulkanEngine::init_pipelines() {
+  VkShaderModule vertexShader;
   VkShaderModule texturedMeshShader;
-  if (!load_shader_module("./shaders/textured_lit.frag.spv",
-                          &texturedMeshShader)) {
-    std::cout << "Error when building the textured mesh shader module" << '\n';
-  } else {
-    std::cout << "Triangle vertex shader successfully loaded" << '\n';
-  }
-
-  // Compile mesh vertex shader
-  VkShaderModule meshVertexShader;
-  if (!load_shader_module("./shaders/tri_mesh.vert.spv", &meshVertexShader)) {
-    std::cout << "Error when building the triangle vertex shader module"
-              << '\n';
-  } else {
-    std::cout << "Triangle vertex shader successfully loaded" << '\n';
-  }
-
-  // Compile colored triangle modules
   VkShaderModule colorMeshShader;
-  if (!load_shader_module("./shaders/default_lit.frag.spv", &colorMeshShader)) {
-    std::cout << "Error when building the triangle fragment shader module"
-              << '\n';
-  } else {
-    std::cout << "Triangle fragment shader successfully loaded" << '\n';
+
+  // Compile shaders
+  {
+    if (!load_shader_module("./shaders/tri_mesh.vert.spv", &vertexShader)) {
+      std::cout << "Error when building the triangle vertex shader module"
+                << '\n';
+    } else {
+      std::cout << "Triangle vertex shader successfully loaded" << '\n';
+    }
+
+    // Compile textured shader
+    if (!load_shader_module("./shaders/textured_lit.frag.spv",
+                            &texturedMeshShader)) {
+      std::cout << "Error when building the textured mesh shader module"
+                << '\n';
+    } else {
+      std::cout << "Textured mesh shader successfully loaded" << '\n';
+    }
+
+    // Compile colored shader
+    if (!load_shader_module("./shaders/default_lit.frag.spv",
+                            &colorMeshShader)) {
+      std::cout << "Error when building the colored fragment shader module"
+                << '\n';
+    } else {
+      std::cout << "Triangle fragment shader successfully loaded" << '\n';
+    }
   }
 
   // Build the stage-create-info for both vertex and fragment stages. This
-  // lets the pieline knwo the shader modules per stage
+  // lets the pieline know the shader modules per stage
   PipelineBuilder pipelineBuilder;
 
-  // Add the other shaders
   pipelineBuilder._shaderStages.push_back(
       // NOLINTNEXTLINE(clang-analyzer-core.CallAndMessage)
       vkinit::pipeline_shader_stage_create_info(VK_SHADER_STAGE_VERTEX_BIT,
-                                                meshVertexShader));
-  // Make sure that colorMeshShader is holding the compiled
-  // colored_triangle.frag
+                                                vertexShader));
   pipelineBuilder._shaderStages.push_back(
       vkinit::pipeline_shader_stage_create_info(VK_SHADER_STAGE_FRAGMENT_BIT,
                                                 colorMeshShader));
 
   // Build the pipeline layout that controls the inputs/outputs of the
-  // shader We are not using descriptor sets or other systems yet, so no
-  // need to use anything other than empty default
+  // shader
   auto mesh_pipeline_layout_info = vkinit::pipeline_layout_create_info();
 
   // Setup push constants
   VkPushConstantRange push_constant;
-  // This push constant range starts at the beginning
   push_constant.offset = 0;
-  // This push constant range takes up the size of a MeshPushConstants struct
   push_constant.size = sizeof(MeshPushConstants);
   // This push constant range is accessible only in the vertex shader
   push_constant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
@@ -488,20 +488,6 @@ void VulkanEngine::init_pipelines() {
   VkPipelineLayout meshPipelineLayout;
   VK_CHECK(vkCreatePipelineLayout(_device, &mesh_pipeline_layout_info, nullptr,
                                   &meshPipelineLayout));
-
-  // Create pipeline layout for the textured mesh, which has 3 descriptor sets
-  // We start from the normal mesh layout
-  auto textured_pipeline_layout_info = mesh_pipeline_layout_info;
-
-  auto texturedSetLayouts = std::array<VkDescriptorSetLayout, 3>{
-      _globalSetLayout, _objectSetLayout, _singleTextureSetLayout};
-  textured_pipeline_layout_info.setLayoutCount =
-      static_cast<uint32_t>(texturedSetLayouts.size());
-  textured_pipeline_layout_info.pSetLayouts = texturedSetLayouts.data();
-
-  VkPipelineLayout texturedPipelineLayout;
-  VK_CHECK(vkCreatePipelineLayout(_device, &textured_pipeline_layout_info,
-                                  nullptr, &texturedPipelineLayout));
 
   // Hook the push constants layout
   pipelineBuilder._pipelineLayout = meshPipelineLayout;
@@ -562,14 +548,32 @@ void VulkanEngine::init_pipelines() {
 
   create_material(meshPipeline, meshPipelineLayout, "defaultMesh");
 
+  // -------------------------------------------------------------------------
+  // Textured layout
+  // -------------------------------------------------------------------------
+
   // Create pipeline for textured drawing
   pipelineBuilder._shaderStages.clear();
   pipelineBuilder._shaderStages.push_back(
       vkinit::pipeline_shader_stage_create_info(VK_SHADER_STAGE_VERTEX_BIT,
-                                                meshVertexShader));
+                                                vertexShader));
   pipelineBuilder._shaderStages.push_back(
       vkinit::pipeline_shader_stage_create_info(VK_SHADER_STAGE_FRAGMENT_BIT,
                                                 texturedMeshShader));
+
+  // Create pipeline layout for the textured mesh, which has 3 descriptor sets
+  // We start from the normal mesh layout
+  auto textured_pipeline_layout_info = mesh_pipeline_layout_info;
+
+  auto texturedSetLayouts = std::array<VkDescriptorSetLayout, 3>{
+      _globalSetLayout, _objectSetLayout, _singleTextureSetLayout};
+  textured_pipeline_layout_info.setLayoutCount =
+      static_cast<uint32_t>(texturedSetLayouts.size());
+  textured_pipeline_layout_info.pSetLayouts = texturedSetLayouts.data();
+
+  VkPipelineLayout texturedPipelineLayout;
+  VK_CHECK(vkCreatePipelineLayout(_device, &textured_pipeline_layout_info,
+                                  nullptr, &texturedPipelineLayout));
 
   pipelineBuilder._pipelineLayout = texturedPipelineLayout;
   VkPipeline texPipeline = pipelineBuilder.build_pipeline(_device, _renderPass);
@@ -577,7 +581,7 @@ void VulkanEngine::init_pipelines() {
 
   // Destroy all shader modules, outside of the queue
   vkDestroyShaderModule(_device, colorMeshShader, nullptr);
-  vkDestroyShaderModule(_device, meshVertexShader, nullptr);
+  vkDestroyShaderModule(_device, vertexShader, nullptr);
   vkDestroyShaderModule(_device, texturedMeshShader, nullptr);
 
   _mainDeletionQueue.push_function([=]() {
@@ -612,42 +616,43 @@ void VulkanEngine::init_scene() {
 
   vkAllocateDescriptorSets(_device, &allocInfo, &texturedMat->textureSet);
 
-  // Write to the descriptor set so that it points to our empire_diffuse texture
-  VkDescriptorImageInfo imageBufferInfo;
-  imageBufferInfo.sampler = blockySampler;
-  imageBufferInfo.imageView = _loadedTextures["empire_diffuse"].imageView;
-  imageBufferInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+  // Write to the descriptor set so that it points to our diffuse texture
+  VkDescriptorImageInfo terrainIBI;
+  terrainIBI.sampler = blockySampler;
+  terrainIBI.imageView = _loadedTextures["terrain_diffuse"].imageView;
+  terrainIBI.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-  auto texture1 = vkinit::write_descriptor_image(
-      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, texturedMat->textureSet,
-      &imageBufferInfo, 0);
+  auto terrain_texture =
+      vkinit::write_descriptor_image(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                                     texturedMat->textureSet, &terrainIBI, 0);
 
-  vkUpdateDescriptorSets(_device, 1, &texture1, 0, nullptr);
+  vkUpdateDescriptorSets(_device, 1, &terrain_texture, 0, nullptr);
 
-  RenderObject map = {.mesh = get_mesh("empire"),
-                      .material = get_material("texturedMesh"),
-                      .transformMatrix =
-                          glm::translate(glm::vec3{5.F, -10.F, 0.F})};
+  RenderObject terrain = {.mesh = get_mesh("terrain"),
+                          .material = get_material("texturedMesh"),
+                          .transformMatrix =
+                              glm::translate(glm::vec3{5.F, -10.F, 0.F})};
 
-  _renderables.push_back(map);
+  _renderables.push_back(terrain);
 
-  // RenderObject monkey = {.mesh = get_mesh("monkey"),
-  //                        .material = get_material("defaultMesh"),
-  //                        .transformMatrix = glm::mat4{1.F}};
+  // Write to the descriptor set so that it points to our diffuse texture
+  VkDescriptorImageInfo characterIBI;
+  characterIBI.sampler = blockySampler;
+  characterIBI.imageView = _loadedTextures["character_diffuse"].imageView;
+  characterIBI.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-  // _renderables.push_back(monkey);
+  auto character_texture =
+      vkinit::write_descriptor_image(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                                     texturedMat->textureSet, &characterIBI, 0);
 
-  // for (int x = -20; x <= 20; x++) {
-  //   for (int y = -20; y <= 20; y++) {
-  //     glm::mat4 translation =
-  //         glm::translate(glm::mat4{1.F}, glm::vec3(x, 0.F, y));
-  //     glm::mat4 scale = glm::scale(glm::mat4{1.F}, glm::vec3(.2F, .2F, .2F));
-  //     RenderObject tri = {.mesh = get_mesh("triangle"),
-  //                         .material = get_material("defaultMesh"),
-  //                         .transformMatrix = translation * scale};
-  //     _renderables.push_back(tri);
-  //   }
-  // }
+  vkUpdateDescriptorSets(_device, 1, &character_texture, 0, nullptr);
+
+  RenderObject character = {.mesh = get_mesh("character"),
+                            .material = get_material("texturedMesh"),
+                            .transformMatrix = glm::translate(
+                                glm::mat4{1.F}, glm::vec3{0.F, 2.F, -7.F})};
+
+  _renderables.push_back(character);
 }
 
 void VulkanEngine::init_descriptors() {
@@ -816,7 +821,8 @@ void VulkanEngine::init_descriptors() {
 }
 
 void VulkanEngine::load_meshes() {
-  Mesh lostEmpire{};
+  Mesh terrain{};
+  Mesh character{};
   {
     const std::string format_str = "Log entry #";
     for (int i = 0; i != 100; ++i) {
@@ -825,30 +831,51 @@ void VulkanEngine::load_meshes() {
 
     Timer timer("Loading mesh took ");
 
-    lostEmpire.load_from_meshasset("./assets/lost_empire.mesh");
-    upload_mesh(lostEmpire);
+    terrain.load_from_meshasset("./assets/terrain/terrain.mesh");
+    upload_mesh(terrain);
+    character.load_from_meshasset("./assets/character/character.mesh");
+    upload_mesh(character);
   }
 
-  _meshes["empire"] = lostEmpire;
+  _meshes["terrain"] = terrain;
+  _meshes["character"] = character;
 }
 
 void VulkanEngine::load_images() {
-  Texture lostEmpire;
+  Texture terrain;
   {
     Timer timer("Loading asset took ");
-    vkutil::load_image_from_asset(*this, "./assets/lost_empire-RGBA.tx",
-                                  lostEmpire.image);
+    vkutil::load_image_from_asset(
+        *this, "./assets/terrain/Textures/Tiled_Stone_Grey_Flat_Albedo.tx",
+        terrain.image);
   }
 
-  auto imageInfo = vkinit::imageview_create_info(VK_FORMAT_R8G8B8A8_SRGB,
-                                                 lostEmpire.image._image,
-                                                 VK_IMAGE_ASPECT_COLOR_BIT);
-  vkCreateImageView(_device, &imageInfo, nullptr, &lostEmpire.imageView);
+  auto terrainImageInfo = vkinit::imageview_create_info(
+      VK_FORMAT_R8G8B8A8_SRGB, terrain.image._image, VK_IMAGE_ASPECT_COLOR_BIT);
+  vkCreateImageView(_device, &terrainImageInfo, nullptr, &terrain.imageView);
 
   _mainDeletionQueue.push_function(
-      [=]() { vkDestroyImageView(_device, lostEmpire.imageView, nullptr); });
+      [=]() { vkDestroyImageView(_device, terrain.imageView, nullptr); });
 
-  _loadedTextures["empire_diffuse"] = lostEmpire;
+  _loadedTextures["terrain_diffuse"] = terrain;
+
+  Texture character;
+  {
+    Timer timer("Loading asset took ");
+    vkutil::load_image_from_asset(
+        *this, "./assets/character/Textures/Character_Albedo.tx",
+        character.image);
+  }
+
+  auto characterImageInfo = vkinit::imageview_create_info(
+      VK_FORMAT_R8G8B8A8_SRGB, character.image._image,
+      VK_IMAGE_ASPECT_COLOR_BIT);
+  vkCreateImageView(_device, &characterImageInfo, nullptr,
+                    &character.imageView);
+
+  _mainDeletionQueue.push_function(
+      [=]() { vkDestroyImageView(_device, character.imageView, nullptr); });
+  _loadedTextures["character_diffuse"] = character;
 }
 
 void VulkanEngine::upload_mesh(Mesh &mesh) {
@@ -1057,7 +1084,7 @@ void VulkanEngine::draw_objects(VkCommandBuffer cmd, RenderObject *first,
                        VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(MeshPushConstants),
                        &constants);
 
-    // Only bind the mesh f it's a different one from last bind
+    // Only bind the mesh if it's a different one from last bind
     if (object.mesh != lastMesh) {
       // Bind the mesh vertex buffer with offset 0
       VkDeviceSize offset = 0;
