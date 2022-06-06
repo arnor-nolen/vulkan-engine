@@ -15,9 +15,9 @@ layout(set = 0, binding = 1) uniform SceneData {
   vec4 sunlightColor;
 } sceneData;
 
-layout(set = 2, binding = 0) uniform sampler2D textures[1];
+layout(set = 2, binding = 0) uniform sampler2D tex;
 
 void main() {
-  vec3 color = texture(textures[0], texCoord).xyz;
+  vec3 color = texture(tex, texCoord).xyz;
   outFragColor = vec4(color, 1.F);
 }

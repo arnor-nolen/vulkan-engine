@@ -578,6 +578,7 @@ void VulkanEngine::init_pipelines() {
   pipelineBuilder._pipelineLayout = texturedPipelineLayout;
   VkPipeline texPipeline = pipelineBuilder.build_pipeline(_device, _renderPass);
   create_material(texPipeline, texturedPipelineLayout, "texturedMesh");
+  create_material(texPipeline, texturedPipelineLayout, "texturedMesh2");
 
   // Destroy all shader modules, outside of the queue
   vkDestroyShaderModule(_device, colorMeshShader, nullptr);
@@ -604,6 +605,7 @@ void VulkanEngine::init_scene() {
       [=]() { vkDestroySampler(_device, blockySampler, nullptr); });
 
   Material *texturedMat = get_material("texturedMesh");
+  Material *texturedMat2 = get_material("texturedMesh2");
 
   // Allocate the descriptor set for single-texture to use on the material
   VkDescriptorSetAllocateInfo allocInfo = {};
@@ -615,6 +617,7 @@ void VulkanEngine::init_scene() {
   allocInfo.pSetLayouts = &_singleTextureSetLayout;
 
   vkAllocateDescriptorSets(_device, &allocInfo, &texturedMat->textureSet);
+  vkAllocateDescriptorSets(_device, &allocInfo, &texturedMat2->textureSet);
 
   // Write to the descriptor set so that it points to our diffuse texture
   VkDescriptorImageInfo terrainIBI;
@@ -641,14 +644,14 @@ void VulkanEngine::init_scene() {
   characterIBI.imageView = _loadedTextures["character_diffuse"].imageView;
   characterIBI.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-  auto character_texture =
-      vkinit::write_descriptor_image(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                                     texturedMat->textureSet, &characterIBI, 0);
+  auto character_texture = vkinit::write_descriptor_image(
+      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, texturedMat2->textureSet,
+      &characterIBI, 0);
 
   vkUpdateDescriptorSets(_device, 1, &character_texture, 0, nullptr);
 
   RenderObject character = {.mesh = get_mesh("character"),
-                            .material = get_material("texturedMesh"),
+                            .material = get_material("texturedMesh2"),
                             .transformMatrix = glm::translate(
                                 glm::mat4{1.F}, glm::vec3{0.F, 2.F, -7.F})};
 
