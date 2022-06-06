@@ -577,8 +577,8 @@ void VulkanEngine::init_pipelines() {
 
   pipelineBuilder._pipelineLayout = texturedPipelineLayout;
   VkPipeline texPipeline = pipelineBuilder.build_pipeline(_device, _renderPass);
-  create_material(texPipeline, texturedPipelineLayout, "texturedMesh");
-  create_material(texPipeline, texturedPipelineLayout, "texturedMesh2");
+  create_material(texPipeline, texturedPipelineLayout, "terrain");
+  create_material(texPipeline, texturedPipelineLayout, "character");
 
   // Destroy all shader modules, outside of the queue
   vkDestroyShaderModule(_device, colorMeshShader, nullptr);
@@ -604,8 +604,8 @@ void VulkanEngine::init_scene() {
   _mainDeletionQueue.push_function(
       [=]() { vkDestroySampler(_device, blockySampler, nullptr); });
 
-  Material *texturedMat = get_material("texturedMesh");
-  Material *texturedMat2 = get_material("texturedMesh2");
+  Material *terrainMat = get_material("terrain");
+  Material *characterMat = get_material("character");
 
   // Allocate the descriptor set for single-texture to use on the material
   VkDescriptorSetAllocateInfo allocInfo = {};
@@ -616,8 +616,8 @@ void VulkanEngine::init_scene() {
   allocInfo.descriptorSetCount = 1;
   allocInfo.pSetLayouts = &_singleTextureSetLayout;
 
-  vkAllocateDescriptorSets(_device, &allocInfo, &texturedMat->textureSet);
-  vkAllocateDescriptorSets(_device, &allocInfo, &texturedMat2->textureSet);
+  vkAllocateDescriptorSets(_device, &allocInfo, &terrainMat->textureSet);
+  vkAllocateDescriptorSets(_device, &allocInfo, &characterMat->textureSet);
 
   // Write to the descriptor set so that it points to our diffuse texture
   VkDescriptorImageInfo terrainIBI;
@@ -627,12 +627,12 @@ void VulkanEngine::init_scene() {
 
   auto terrain_texture =
       vkinit::write_descriptor_image(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                                     texturedMat->textureSet, &terrainIBI, 0);
+                                     terrainMat->textureSet, &terrainIBI, 0);
 
   vkUpdateDescriptorSets(_device, 1, &terrain_texture, 0, nullptr);
 
   RenderObject terrain = {.mesh = get_mesh("terrain"),
-                          .material = get_material("texturedMesh"),
+                          .material = get_material("terrain"),
                           .transformMatrix =
                               glm::translate(glm::vec3{5.F, -10.F, 0.F})};
 
@@ -645,13 +645,13 @@ void VulkanEngine::init_scene() {
   characterIBI.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
   auto character_texture = vkinit::write_descriptor_image(
-      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, texturedMat2->textureSet,
+      VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, characterMat->textureSet,
       &characterIBI, 0);
 
   vkUpdateDescriptorSets(_device, 1, &character_texture, 0, nullptr);
 
   RenderObject character = {.mesh = get_mesh("character"),
-                            .material = get_material("texturedMesh2"),
+                            .material = get_material("character"),
                             .transformMatrix = glm::translate(
                                 glm::mat4{1.F}, glm::vec3{0.F, 2.F, -7.F})};
 
