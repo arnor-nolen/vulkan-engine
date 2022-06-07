@@ -592,12 +592,18 @@ void VulkanEngine::init_scene() {
 
   vkUpdateDescriptorSets(_device, 1, &terrain_texture, 0, nullptr);
 
-  RenderObject terrain = {.mesh = get_mesh("terrain"),
-                          .material = get_material("terrain"),
-                          .transformMatrix =
-                              glm::translate(glm::vec3{5.F, -10.F, 0.F})};
+  const float hexScale = std::sqrt(3);
+  for (size_t i = 0; i < 10; ++i) {
+    for (size_t j = 0; j < 10; ++j) {
+      RenderObject terrain = {
+          .mesh = get_mesh("terrain"),
+          .material = get_material("terrain"),
+          .transformMatrix = glm::translate(glm::vec3{
+              i * hexScale + (j % 2 ? 0 : hexScale / 2), 0.F, j * 3.F / 2.F})};
 
-  _renderables.push_back(terrain);
+      _renderables.push_back(terrain);
+    }
+  }
 
   // Write to the descriptor set so that it points to our diffuse texture
   VkDescriptorImageInfo characterIBI = {

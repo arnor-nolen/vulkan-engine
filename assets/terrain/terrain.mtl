@@ -1,8 +1,8 @@
-# Blender 3.1.2 MTL File: 'terrain.blend'
-# www.blender.org
+# Blender MTL File: 'terrain.blend'
+# Material Count: 1
 
 newmtl Material.001
-Ns 360.000000
+Ns 359.999993
 Ka 1.000000 1.000000 1.000000
 Kd 0.800000 0.800000 0.800000
 Ks 0.500000 0.500000 0.500000

@@ -18,6 +18,6 @@ layout(set = 0, binding = 1) uniform SceneData {
 layout(set = 2, binding = 0) uniform sampler2D tex;
 
 void main() {
-  vec3 color = texture(tex, texCoord).xyz;
+  vec3 color = texture(tex, texCoord).xyz * vec3(gl_PrimitiveID + 1 , gl_PrimitiveID + 1 , gl_PrimitiveID + 1) / 10;
   outFragColor = vec4(color, 1.F);
 }
