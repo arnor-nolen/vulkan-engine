@@ -178,7 +178,7 @@ void VulkanEngine::init_imgui() {
   init_info.DescriptorPool = imguiPool;
   init_info.MinImageCount = 3;
   init_info.ImageCount = 3;
-  init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+  init_info.MSAASamples = _samples;
 
   ImGui_ImplVulkan_Init(&init_info, _renderPass);
 
@@ -213,6 +213,36 @@ void VulkanEngine::init_swapchain() {
   _swapchainImageViews = vkbSwapchain.get_image_views().value();
   _swapchainImageFormat = vkbSwapchain.image_format;
 
+  // color image size will match the window
+  VkExtent3D colorImageExtent = {_windowExtent.width, _windowExtent.height, 1};
+
+  // Hardcoding the color format to 32 bit float
+  _colorFormat = VK_FORMAT_B8G8R8A8_SRGB;
+
+  // The color image will be an image with the format we selected and color
+  // Attachment usage flag
+  auto cimg_info =
+      vkinit::image_create_info(_colorFormat,
+                                VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT |
+                                    VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+                                colorImageExtent, _samples);
+
+  // For the color image we watn to allocate it from GPU local memory
+  VmaAllocationCreateInfo cimg_allocinfo = {};
+  cimg_allocinfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+  cimg_allocinfo.requiredFlags =
+      VkMemoryPropertyFlags(VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+  // Allocate and create the image
+  vmaCreateImage(_allocator, &cimg_info, &cimg_allocinfo, &_colorImage._image,
+                 &_colorImage._allocation, nullptr);
+
+  // Build and image-view for the color image to use for rendering
+  auto cview_info = vkinit::imageview_create_info(
+      _colorFormat, _colorImage._image, VK_IMAGE_ASPECT_COLOR_BIT);
+
+  VK_CHECK(vkCreateImageView(_device, &cview_info, nullptr, &_colorImageView));
+
   // Depth image size will match the window
   VkExtent3D depthImageExtent = {_windowExtent.width, _windowExtent.height, 1};
 
@@ -223,7 +253,7 @@ void VulkanEngine::init_swapchain() {
   // Attachment usage flag
   auto dimg_info = vkinit::image_create_info(
       _depthFormat, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-      depthImageExtent);
+      depthImageExtent, _samples);
 
   // For the depth image we watn to allocate it from GPU local memory
   VmaAllocationCreateInfo dimg_allocinfo = {};
@@ -244,6 +274,8 @@ void VulkanEngine::init_swapchain() {
   _mainDeletionQueue.push_function([=]() {
     vkDestroyImageView(_device, _depthImageView, nullptr);
     vmaDestroyImage(_allocator, _depthImage._image, _depthImage._allocation);
+    vkDestroyImageView(_device, _colorImageView, nullptr);
+    vmaDestroyImage(_allocator, _colorImage._image, _colorImage._allocation);
     vkDestroySwapchainKHR(_device, _swapchain, nullptr);
   });
 }
@@ -282,7 +314,7 @@ void VulkanEngine::init_default_renderpass() {
   // The attachment will have the format needed by the swapchain
   color_attachment.format = _swapchainImageFormat;
   // 1 sample, we won't be doing MSAA
-  color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+  color_attachment.samples = _samples;
   // We clear when this attachment is loaded
   color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
   // We keep the attachment stored when the renderpass ends
@@ -296,7 +328,7 @@ void VulkanEngine::init_default_renderpass() {
 
   // After the renderpass ends, the image has to be on a layout ready for
   // display
-  color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+  color_attachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
   VkAttachmentReference color_attachment_ref = {};
   // Attachment number will index into the pAttachments array in the parent
@@ -308,7 +340,7 @@ void VulkanEngine::init_default_renderpass() {
   VkAttachmentDescription depth_attachment = {};
   depth_attachment.flags = 0;
   depth_attachment.format = _depthFormat;
-  depth_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
+  depth_attachment.samples = _samples;
   depth_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
   depth_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
   depth_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -322,16 +354,43 @@ void VulkanEngine::init_default_renderpass() {
   depth_attachment_ref.layout =
       VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
+  VkAttachmentDescription color_attachment_resolve{};
+  color_attachment_resolve.format = _swapchainImageFormat;
+  color_attachment_resolve.samples = VK_SAMPLE_COUNT_1_BIT;
+  color_attachment_resolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+  color_attachment_resolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+  color_attachment_resolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+  color_attachment_resolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+  color_attachment_resolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  color_attachment_resolve.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+
+  VkAttachmentReference color_attachment_resolve_ref = {};
+  color_attachment_resolve_ref.attachment = 2;
+  color_attachment_resolve_ref.layout =
+      VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
   // We are going to create 1 subpass, which is the minimum you can do
   VkSubpassDescription subpass = {};
   subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
   subpass.colorAttachmentCount = 1;
   subpass.pColorAttachments = &color_attachment_ref;
   subpass.pDepthStencilAttachment = &depth_attachment_ref;
+  subpass.pResolveAttachments = &color_attachment_resolve_ref;
+
+  VkSubpassDependency dependency{};
+  dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+  dependency.dstSubpass = 0;
+  dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
+                            VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+  dependency.srcAccessMask = 0;
+  dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT |
+                            VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+  dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
+                             VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
   // Array of 2 attachments, 1 for color, and other for depth
-  auto attachments = std::array<VkAttachmentDescription, 2>(
-      {color_attachment, depth_attachment});
+  auto attachments = std::array<VkAttachmentDescription, 3>(
+      {color_attachment, depth_attachment, color_attachment_resolve});
 
   VkRenderPassCreateInfo render_pass_info = {};
   render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -342,6 +401,8 @@ void VulkanEngine::init_default_renderpass() {
   // Connect the subpass to the info
   render_pass_info.subpassCount = 1;
   render_pass_info.pSubpasses = &subpass;
+  render_pass_info.dependencyCount = 1;
+  render_pass_info.pDependencies = &dependency;
 
   VK_CHECK(
       vkCreateRenderPass(_device, &render_pass_info, nullptr, &_renderPass));
@@ -358,7 +419,6 @@ void VulkanEngine::init_framebuffers() {
   fb_info.pNext = nullptr;
 
   fb_info.renderPass = _renderPass;
-  fb_info.attachmentCount = 1;
   fb_info.width = _windowExtent.width;
   fb_info.height = _windowExtent.height;
   fb_info.layers = 1;
@@ -369,8 +429,8 @@ void VulkanEngine::init_framebuffers() {
 
   // Create framebuffers for each of the swapchain image views
   for (uint32_t i = 0; i != swapchain_imagecount; ++i) {
-    auto attachments =
-        std::array<VkImageView, 2>{_swapchainImageViews[i], _depthImageView};
+    auto attachments = std::array<VkImageView, 3>{
+        _colorImageView, _depthImageView, _swapchainImageViews[i]};
 
     fb_info.pAttachments = attachments.data();
     fb_info.attachmentCount = static_cast<uint32_t>(attachments.size());
@@ -495,7 +555,8 @@ void VulkanEngine::init_pipelines() {
       vkinit::rasterization_state_create_info(VK_POLYGON_MODE_FILL);
 
   // We don't use multisampling, so just run the default one
-  pipelineBuilder._multisampling = vkinit::multisampling_state_create_info();
+  pipelineBuilder._multisampling =
+      vkinit::multisampling_state_create_info(_samples);
 
   // A single blend attachemnt with now blending and writing to RGBA
   pipelineBuilder._colorBlendAttachment =
@@ -1289,6 +1350,7 @@ void VulkanEngine::draw() {
 
 void VulkanEngine::run() {
   SDL_Event e;
+  // bool bQuit = true;
   bool bQuit = false;
 
   auto start = std::chrono::system_clock::now();

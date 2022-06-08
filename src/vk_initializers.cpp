@@ -96,7 +96,7 @@ auto vkinit::rasterization_state_create_info(VkPolygonMode polygonMode)
   return info;
 }
 
-auto vkinit::multisampling_state_create_info()
+auto vkinit::multisampling_state_create_info(VkSampleCountFlagBits samples)
     -> VkPipelineMultisampleStateCreateInfo {
   VkPipelineMultisampleStateCreateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
@@ -104,7 +104,7 @@ auto vkinit::multisampling_state_create_info()
 
   info.sampleShadingEnable = VK_FALSE;
   // Multisampling defaulted to no multisampling (1 sample per pixel)
-  info.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+  info.rasterizationSamples = samples;
   info.minSampleShading = 1.0F;
   info.pSampleMask = nullptr;
   info.alphaToCoverageEnable = VK_FALSE;
@@ -141,7 +141,8 @@ auto vkinit::pipeline_layout_create_info() -> VkPipelineLayoutCreateInfo {
 }
 
 auto vkinit::image_create_info(VkFormat format, VkImageUsageFlags usageFlags,
-                               VkExtent3D extent) -> VkImageCreateInfo {
+                               VkExtent3D extent, VkSampleCountFlagBits samples)
+    -> VkImageCreateInfo {
   VkImageCreateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   info.pNext = nullptr;
@@ -153,7 +154,7 @@ auto vkinit::image_create_info(VkFormat format, VkImageUsageFlags usageFlags,
 
   info.mipLevels = 1;
   info.arrayLayers = 1;
-  info.samples = VK_SAMPLE_COUNT_1_BIT;
+  info.samples = samples;
   info.tiling = VK_IMAGE_TILING_OPTIMAL;
   info.usage = usageFlags;
 

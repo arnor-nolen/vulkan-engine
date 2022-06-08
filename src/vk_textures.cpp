@@ -46,8 +46,8 @@ auto vkutil::load_image_from_file(VulkanEngine &engine,
 
   VkImageCreateInfo dimg_info = vkinit::image_create_info(
       image_format,
-      VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
-      imageExtent);
+      VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, imageExtent,
+      VK_SAMPLE_COUNT_1_BIT);
 
   AllocatedImage newImage;
 
@@ -180,8 +180,8 @@ auto vkutil::upload_image(int texWidth, int texHeight, VkFormat image_format,
 
   VkImageCreateInfo dimg_info = vkinit::image_create_info(
       image_format,
-      VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
-      imageExtent);
+      VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, imageExtent,
+      VK_SAMPLE_COUNT_1_BIT);
 
   AllocatedImage newImage;
 

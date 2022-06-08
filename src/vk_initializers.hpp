@@ -25,14 +25,16 @@ auto input_assembly_create_info(VkPrimitiveTopology topology)
 auto rasterization_state_create_info(VkPolygonMode polygonMode)
     -> VkPipelineRasterizationStateCreateInfo;
 
-auto multisampling_state_create_info() -> VkPipelineMultisampleStateCreateInfo;
+auto multisampling_state_create_info(VkSampleCountFlagBits samples)
+    -> VkPipelineMultisampleStateCreateInfo;
 
 auto color_blend_attachment_state() -> VkPipelineColorBlendAttachmentState;
 
 auto pipeline_layout_create_info() -> VkPipelineLayoutCreateInfo;
 
 auto image_create_info(VkFormat format, VkImageUsageFlags usageFlags,
-                       VkExtent3D extent) -> VkImageCreateInfo;
+                       VkExtent3D extent, VkSampleCountFlagBits samples)
+    -> VkImageCreateInfo;
 
 auto imageview_create_info(VkFormat format, VkImage image,
                            VkImageAspectFlags aspectFlags)

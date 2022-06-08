@@ -154,9 +154,15 @@ private:
 
   VkImageView _depthImageView;
   AllocatedImage _depthImage;
+  VkImageView _colorImageView;
+  AllocatedImage _colorImage;
 
   // The format for depth image
   VkFormat _depthFormat;
+  VkFormat _colorFormat;
+
+  // AA samples
+  VkSampleCountFlagBits _samples = VK_SAMPLE_COUNT_4_BIT;
 
   // Default array of renderable objects
   std::vector<RenderObject> _renderables;
