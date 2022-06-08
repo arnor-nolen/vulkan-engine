@@ -3,6 +3,8 @@
 #include <spdlog/sinks/ringbuffer_sink.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
+namespace utils {
+
 Logger logger{};
 
 Logger::Logger() {
@@ -26,3 +28,5 @@ void Logger::dump(const std::string_view log_entry,
 auto Logger::get_logs() -> std::vector<std::string> {
   return ringbuffer_sink_->last_formatted();
 }
+
+} // namespace utils

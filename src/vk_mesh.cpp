@@ -3,7 +3,6 @@
 #include "utils/logger.hpp"
 #include <array>
 #include <filesystem>
-#include <iostream>
 #include <string_view>
 #include <tiny_obj_loader.h>
 
@@ -59,8 +58,9 @@ auto Mesh::load_from_meshasset(const std::filesystem::path &filename) -> bool {
   bool loaded = assets::load_binaryfile(filename, file);
 
   if (!loaded) {
-    ::logger.dump(std::format("Error when loading mesh {}", filename.string()),
-                  spdlog::level::err);
+    utils::logger.dump(
+        std::format("Error when loading mesh {}", filename.string()),
+        spdlog::level::err);
     return false;
   }
 
@@ -134,9 +134,9 @@ auto Mesh::load_from_meshasset(const std::filesystem::path &filename) -> bool {
     }
   }
 
-  ::logger.dump(std::format("Loaded mesh {}: Verts={}, Tris={}",
-                            filename.string(), _vertices.size(),
-                            _indices.size() / 3));
+  utils::logger.dump(std::format("Loaded mesh {}: Verts={}, Tris={}",
+                                 filename.string(), _vertices.size(),
+                                 _indices.size() / 3));
 
   return true;
 }
@@ -162,7 +162,7 @@ auto Mesh::load_from_obj(const std::filesystem::path &filename) -> bool {
   // If we have any error, print it to the console, and break the mesh loading.
   // This happens if the file can't be found or is malformed
   if (!err.empty()) {
-    ::logger.dump(err, spdlog::level::err);
+    utils::logger.dump(err, spdlog::level::err);
     return false;
   }
 

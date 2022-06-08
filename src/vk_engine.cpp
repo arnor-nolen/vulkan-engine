@@ -17,7 +17,6 @@
 #include <cstdint>
 #include <format>
 #include <fstream>
-#include <iostream>
 #include <numeric>
 
 #include "vma_implementation.hpp"
@@ -25,8 +24,9 @@
 // We want to immediately abort when there is an error
 constexpr void VK_CHECK(VkResult err) {
   if (err != 0) {
-    ::logger.dump(std::format("Detected Vulkan error: {}", std::to_string(err)),
-                  spdlog::level::err);
+    utils::logger.dump(
+        std::format("Detected Vulkan error: {}", std::to_string(err)),
+        spdlog::level::err);
     abort();
   }
 }
@@ -426,19 +426,20 @@ void VulkanEngine::init_pipelines() {
   // Compile shaders
   {
     if (!load_shader_module("./shaders/tri_mesh.vert.spv", &vertexShader)) {
-      ::logger.dump("Error when building the triangle vertex shader module",
-                    spdlog::level::err);
+      utils::logger.dump(
+          "Error when building the triangle vertex shader module",
+          spdlog::level::err);
     } else {
-      ::logger.dump("Triangle vertex shader successfully loaded");
+      utils::logger.dump("Triangle vertex shader successfully loaded");
     }
 
     // Compile textured shader
     if (!load_shader_module("./shaders/textured_lit.frag.spv",
                             &texturedMeshShader)) {
-      ::logger.dump("Error when building the textured mesh shader module",
-                    spdlog::level::err);
+      utils::logger.dump("Error when building the textured mesh shader module",
+                         spdlog::level::err);
     } else {
-      ::logger.dump("Textured mesh shader successfully loaded");
+      utils::logger.dump("Textured mesh shader successfully loaded");
     }
   }
 
@@ -801,7 +802,7 @@ void VulkanEngine::load_meshes() {
   Mesh terrain{};
   Mesh character{};
   {
-    Timer timer("Loading mesh took ");
+    utils::Timer timer("Loading mesh took");
 
     terrain.load_from_meshasset("./assets/terrain/terrain.mesh");
     upload_mesh(terrain);
@@ -817,7 +818,7 @@ void VulkanEngine::load_meshes() {
 void VulkanEngine::load_images() {
   Texture terrain;
   {
-    Timer timer("Loading asset took ");
+    utils::Timer timer("Loading asset took");
     vkutil::load_image_from_asset(
         *this, "./assets/terrain/Textures/Tiled_Stone_Grey_Flat_Albedo.tx",
         terrain.image);
@@ -834,7 +835,7 @@ void VulkanEngine::load_images() {
 
   Texture character;
   {
-    Timer timer("Loading asset took ");
+    utils::Timer timer("Loading asset took");
     vkutil::load_image_from_asset(
         *this, "./assets/character/Textures/Character_Albedo.tx",
         character.image);
@@ -1332,7 +1333,7 @@ void VulkanEngine::run() {
                  ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
                      ImGuiWindowFlags_NoMove);
 
-    for (auto logs = ::logger.get_logs(); auto &&log : logs) {
+    for (auto logs = utils::logger.get_logs(); auto &&log : logs) {
       ImGui::TextUnformatted(log.c_str());
     }
 
@@ -1395,7 +1396,7 @@ auto PipelineBuilder::build_pipeline(VkDevice device, VkRenderPass pass)
   VkPipeline newPipeline;
   if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo,
                                 nullptr, &newPipeline) != VK_SUCCESS) {
-    ::logger.dump("Failed to create pipeline", spdlog::level::err);
+    utils::logger.dump("Failed to create pipeline", spdlog::level::err);
     return VK_NULL_HANDLE;
   }
   return newPipeline;

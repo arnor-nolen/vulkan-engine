@@ -3,7 +3,6 @@
 #include "assetlib/asset_loader.hpp"
 #include "assetlib/texture_asset.hpp"
 #include "vk_initializers.hpp"
-#include <iostream>
 
 #include "stb_image_implementation.hpp"
 
@@ -14,8 +13,9 @@ auto vkutil::load_image_from_file(VulkanEngine &engine,
   stbi_uc *pixels = stbi_load(file.string().c_str(), &texWidth, &texHeight,
                               &texChannels, STBI_rgb_alpha);
   if (pixels == nullptr) {
-    ::logger.dump(std::format("Failed to load texture file {}", file.string()),
-                  spdlog::level::err);
+    utils::logger.dump(
+        std::format("Failed to load texture file {}", file.string()),
+        spdlog::level::err);
     return false;
   }
   void *pixel_ptr = pixels;
@@ -117,7 +117,8 @@ auto vkutil::load_image_from_file(VulkanEngine &engine,
   vmaDestroyBuffer(engine._allocator, stagingBuffer._buffer,
                    stagingBuffer._allocation);
 
-  ::logger.dump(std::format("Texture loaded successfully {}", file.string()));
+  utils::logger.dump(
+      std::format("Texture loaded successfully {}", file.string()));
 
   outImage = newImage;
 
@@ -131,7 +132,7 @@ auto vkutil::load_image_from_asset(VulkanEngine &engine,
   bool loaded = assets::load_binaryfile(filename, file);
 
   if (!loaded) {
-    ::logger.dump("Error when loading image", spdlog::level::err);
+    utils::logger.dump("Error when loading image", spdlog::level::err);
     return false;
   }
 

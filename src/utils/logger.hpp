@@ -7,6 +7,8 @@
 #include <string_view>
 #include <vector>
 
+namespace utils {
+
 class Logger {
 public:
   Logger();
@@ -20,3 +22,5 @@ private:
 };
 
 extern Logger logger;
+
+} // namespace utils

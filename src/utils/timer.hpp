@@ -2,6 +2,8 @@
 
 #include <chrono>
 
+namespace utils {
+
 struct Timer {
   Timer();
   explicit Timer(std::string_view str);
@@ -18,3 +20,5 @@ private:
   std::chrono::time_point<std::chrono::steady_clock> start_time_;
   std::string str_;
 };
+
+} // namespace utils
