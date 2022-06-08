@@ -1,5 +1,6 @@
 #include "vk_mesh.hpp"
 #include "assetlib/mesh_asset.hpp"
+#include "utils/logger.hpp"
 #include <array>
 #include <filesystem>
 #include <iostream>
@@ -58,8 +59,8 @@ auto Mesh::load_from_meshasset(const std::filesystem::path &filename) -> bool {
   bool loaded = assets::load_binaryfile(filename, file);
 
   if (!loaded) {
-    std::cout << "Error when loading mesh " << filename << std::endl;
-    ;
+    ::logger.dump(std::format("Error when loading mesh {}", filename.string()),
+                  spdlog::level::err);
     return false;
   }
 
@@ -133,8 +134,9 @@ auto Mesh::load_from_meshasset(const std::filesystem::path &filename) -> bool {
     }
   }
 
-  std::cout << "Loaded mesh " << filename << ": Verts=" << _vertices.size()
-            << ", Tris=" << _indices.size() / 3 << '\n';
+  ::logger.dump(std::format("Loaded mesh {}: Verts={}, Tris={}",
+                            filename.string(), _vertices.size(),
+                            _indices.size() / 3));
 
   return true;
 }
@@ -160,7 +162,7 @@ auto Mesh::load_from_obj(const std::filesystem::path &filename) -> bool {
   // If we have any error, print it to the console, and break the mesh loading.
   // This happens if the file can't be found or is malformed
   if (!err.empty()) {
-    std::cerr << err << '\n';
+    ::logger.dump(err, spdlog::level::err);
     return false;
   }
 

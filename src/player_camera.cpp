@@ -100,10 +100,10 @@ auto PlayerCamera::get_view_matrix() -> glm::mat4 {
 }
 
 auto PlayerCamera::get_projection_matrix() -> glm::mat4 {
-  glm::mat4 pro =
+  glm::mat4 proj =
       glm::perspective(glm::radians(70.F), 1700.F / 900.F, 0.1F, 5000.F);
-  pro[1][1] *= -1;
-  return pro;
+  proj[1][1] *= -1;
+  return proj;
 }
 
 auto PlayerCamera::get_rotation_matrix() -> glm::mat4 {

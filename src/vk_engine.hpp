@@ -103,8 +103,6 @@ public:
 
   VkDevice _device; // Vulkan device for commands
 
-  Logger _logger{};
-
   // initializes everything in the engine
   void init();
 

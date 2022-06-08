@@ -15,6 +15,7 @@
 #include "utils/timer.hpp"
 #include <array>
 #include <cstdint>
+#include <format>
 #include <fstream>
 #include <iostream>
 #include <numeric>
@@ -24,7 +25,8 @@
 // We want to immediately abort when there is an error
 constexpr void VK_CHECK(VkResult err) {
   if (err != 0) {
-    std::cout << "Detected Vulkan error: " << err << '\n';
+    ::logger.dump(std::format("Detected Vulkan error: {}", std::to_string(err)),
+                  spdlog::level::err);
     abort();
   }
 }
@@ -63,7 +65,7 @@ void VulkanEngine::init() {
   // Everything went fine
   _isInitialized = true;
 
-  _camera = {.position = {0.F, 6.F, 5.F}};
+  _camera = {.position = {0.F, 10.F, 0.F}};
 }
 
 void VulkanEngine::init_vulkan() {
@@ -424,19 +426,19 @@ void VulkanEngine::init_pipelines() {
   // Compile shaders
   {
     if (!load_shader_module("./shaders/tri_mesh.vert.spv", &vertexShader)) {
-      std::cout << "Error when building the triangle vertex shader module"
-                << '\n';
+      ::logger.dump("Error when building the triangle vertex shader module",
+                    spdlog::level::err);
     } else {
-      std::cout << "Triangle vertex shader successfully loaded" << '\n';
+      ::logger.dump("Triangle vertex shader successfully loaded");
     }
 
     // Compile textured shader
     if (!load_shader_module("./shaders/textured_lit.frag.spv",
                             &texturedMeshShader)) {
-      std::cout << "Error when building the textured mesh shader module"
-                << '\n';
+      ::logger.dump("Error when building the textured mesh shader module",
+                    spdlog::level::err);
     } else {
-      std::cout << "Textured mesh shader successfully loaded" << '\n';
+      ::logger.dump("Textured mesh shader successfully loaded");
     }
   }
 
@@ -592,14 +594,18 @@ void VulkanEngine::init_scene() {
 
   vkUpdateDescriptorSets(_device, 1, &terrain_texture, 0, nullptr);
 
-  const float hexScale = std::sqrt(3);
-  for (size_t i = 0; i < 10; ++i) {
-    for (size_t j = 0; j < 10; ++j) {
+  glm::vec2 gridSize = {100, 100};
+  glm::vec2 gridOffset = gridSize / -2.F;
+
+  for (size_t i = 0; i != gridSize.x; ++i) {
+    for (size_t j = 0; j != gridSize.y; ++j) {
+
       RenderObject terrain = {
           .mesh = get_mesh("terrain"),
           .material = get_material("terrain"),
-          .transformMatrix = glm::translate(glm::vec3{
-              i * hexScale + (j % 2 ? 0 : hexScale / 2), 0.F, j * 3.F / 2.F})};
+          .transformMatrix = glm::translate(
+              glm::vec3{(i + gridOffset.x + (j % 2) * 0.5F) * std::sqrt(3), 0.F,
+                        (j + gridOffset.y) * 1.5F})};
 
       _renderables.push_back(terrain);
     }
@@ -621,7 +627,7 @@ void VulkanEngine::init_scene() {
   RenderObject character = {.mesh = get_mesh("character"),
                             .material = get_material("character"),
                             .transformMatrix = glm::translate(
-                                glm::mat4{1.F}, glm::vec3{0.F, 2.F, -7.F})};
+                                glm::mat4{1.F}, glm::vec3{0.F, 0.F, -5.F})};
 
   _renderables.push_back(character);
 }
@@ -795,15 +801,11 @@ void VulkanEngine::load_meshes() {
   Mesh terrain{};
   Mesh character{};
   {
-    const std::string format_str = "Log entry #";
-    for (int i = 0; i != 100; ++i) {
-      _logger.dump(format_str + std::to_string(i));
-    }
-
     Timer timer("Loading mesh took ");
 
     terrain.load_from_meshasset("./assets/terrain/terrain.mesh");
     upload_mesh(terrain);
+
     character.load_from_meshasset("./assets/character/character.mesh");
     upload_mesh(character);
   }
@@ -1330,7 +1332,7 @@ void VulkanEngine::run() {
                  ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
                      ImGuiWindowFlags_NoMove);
 
-    for (auto logs = _logger.get_logs(); auto &&log : logs) {
+    for (auto logs = ::logger.get_logs(); auto &&log : logs) {
       ImGui::TextUnformatted(log.c_str());
     }
 
@@ -1393,7 +1395,7 @@ auto PipelineBuilder::build_pipeline(VkDevice device, VkRenderPass pass)
   VkPipeline newPipeline;
   if (vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1, &pipelineInfo,
                                 nullptr, &newPipeline) != VK_SUCCESS) {
-    std::cout << "Failed to create pipeline\n";
+    ::logger.dump("Failed to create pipeline", spdlog::level::err);
     return VK_NULL_HANDLE;
   }
   return newPipeline;
