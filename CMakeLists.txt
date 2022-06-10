@@ -29,6 +29,7 @@ find_package(volk REQUIRED CONFIG)
 find_package(lz4 REQUIRED CONFIG)
 find_package(nlohmann_json REQUIRED CONFIG)
 find_package(spdlog REQUIRED CONFIG)
+find_package(msdfgen REQUIRED CONFIG)
 
 
 # Set standard (C++20)
@@ -138,7 +139,19 @@ add_custom_target(
 # -------------------------------------
 
 # Link libraries
-target_link_libraries(${PROJECT_NAME} asset_lib imgui_lib Vulkan::Vulkan vulkan-memory-allocator::vulkan-memory-allocator glm::glm spdlog::spdlog vk-bootstrap::vk-bootstrap stb::stb tinyobjloader::tinyobjloader)
+target_link_libraries(${PROJECT_NAME} 
+  asset_lib 
+  imgui_lib 
+  Vulkan::Vulkan 
+  vulkan-memory-allocator::vulkan-memory-allocator 
+  glm::glm 
+  spdlog::spdlog 
+  vk-bootstrap::vk-bootstrap 
+  stb::stb 
+  tinyobjloader::tinyobjloader 
+  msdfgen::msdfgen 
+  msdfgen::msdfgen-ext
+)
 
 # Add shaders check
 add_dependencies(${PROJECT_NAME} Shaders)

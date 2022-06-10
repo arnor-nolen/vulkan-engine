@@ -481,7 +481,8 @@ void VulkanEngine::init_sync_structures() {
 
 void VulkanEngine::init_pipelines() {
   VkShaderModule vertexShader;
-  VkShaderModule texturedMeshShader;
+  VkShaderModule texturedShader;
+  VkShaderModule textShader;
 
   // Compile shaders
   {
@@ -495,11 +496,19 @@ void VulkanEngine::init_pipelines() {
 
     // Compile textured shader
     if (!load_shader_module("./shaders/textured_lit.frag.spv",
-                            &texturedMeshShader)) {
-      utils::logger.dump("Error when building the textured mesh shader module",
+                            &texturedShader)) {
+      utils::logger.dump("Error when building the textured shader module",
                          spdlog::level::err);
     } else {
-      utils::logger.dump("Textured mesh shader successfully loaded");
+      utils::logger.dump("Textured shader successfully loaded");
+    }
+
+    // Compile text shader
+    if (!load_shader_module("./shaders/text.frag.spv", &textShader)) {
+      utils::logger.dump("Error when building the text shader module",
+                         spdlog::level::err);
+    } else {
+      utils::logger.dump("Text shader successfully loaded");
     }
   }
 
@@ -521,14 +530,6 @@ void VulkanEngine::init_pipelines() {
   // Push constant setup
   textured_pipeline_layout_info.pPushConstantRanges = &push_constant;
   textured_pipeline_layout_info.pushConstantRangeCount = 1;
-
-  std::array<VkDescriptorSetLayout, 2> setLayouts = {_globalSetLayout,
-                                                     _objectSetLayout};
-
-  // Hook the global set layout
-  textured_pipeline_layout_info.setLayoutCount =
-      static_cast<uint32_t>(setLayouts.size());
-  textured_pipeline_layout_info.pSetLayouts = setLayouts.data();
 
   // Vertex input controls how to read vertices from vertex buffers. We
   // aren't using it yet.
@@ -587,7 +588,7 @@ void VulkanEngine::init_pipelines() {
                                                 vertexShader));
   pipelineBuilder._shaderStages.push_back(
       vkinit::pipeline_shader_stage_create_info(VK_SHADER_STAGE_FRAGMENT_BIT,
-                                                texturedMeshShader));
+                                                texturedShader));
 
   // Create pipeline layout for the textured mesh, which has 3 descriptor sets
   // We start from the normal mesh layout
@@ -602,34 +603,90 @@ void VulkanEngine::init_pipelines() {
                                   nullptr, &texturedPipelineLayout));
 
   pipelineBuilder._pipelineLayout = texturedPipelineLayout;
-  VkPipeline texPipeline = pipelineBuilder.build_pipeline(_device, _renderPass);
+  VkPipeline texturePipeline =
+      pipelineBuilder.build_pipeline(_device, _renderPass);
 
-  create_material(texPipeline, texturedPipelineLayout, "terrain");
-  create_material(texPipeline, texturedPipelineLayout, "character");
+  create_material(texturePipeline, texturedPipelineLayout, "terrain");
+  create_material(texturePipeline, texturedPipelineLayout, "character");
+
+  // ------------------------------
+  // Text pipeline
+  // ------------------------------
+
+  // Build the pipeline layout that controls the inputs/outputs of the
+  // shader
+  auto text_pipeline_layout_info = vkinit::pipeline_layout_create_info();
+
+  // // Setup push constants
+  // VkPushConstantRange push_constant;
+  // push_constant.offset = 0;
+  // push_constant.size = sizeof(MeshPushConstants);
+  // // This push constant range is accessible only in the vertex shader
+  // push_constant.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+  // Push constant setup
+  text_pipeline_layout_info.pPushConstantRanges = &push_constant;
+  text_pipeline_layout_info.pushConstantRangeCount = 1;
+
+  auto textSetLayouts = std::array<VkDescriptorSetLayout, 3>{
+      _globalSetLayout, _objectSetLayout, _singleTextureSetLayout};
+  text_pipeline_layout_info.setLayoutCount =
+      static_cast<uint32_t>(textSetLayouts.size());
+  text_pipeline_layout_info.pSetLayouts = textSetLayouts.data();
+
+  pipelineBuilder._shaderStages.clear();
+  pipelineBuilder._shaderStages.push_back(
+      vkinit::pipeline_shader_stage_create_info(VK_SHADER_STAGE_VERTEX_BIT,
+                                                vertexShader));
+  pipelineBuilder._shaderStages.push_back(
+      vkinit::pipeline_shader_stage_create_info(VK_SHADER_STAGE_FRAGMENT_BIT,
+                                                textShader));
+
+  VkPipelineLayout textPipelineLayout;
+  VK_CHECK(vkCreatePipelineLayout(_device, &text_pipeline_layout_info, nullptr,
+                                  &textPipelineLayout));
+
+  pipelineBuilder._pipelineLayout = textPipelineLayout;
+  VkPipeline textPipeline =
+      pipelineBuilder.build_pipeline(_device, _renderPass);
+  create_material(textPipeline, textPipelineLayout, "text");
 
   // Destroy all shader modules, outside of the queue
   vkDestroyShaderModule(_device, vertexShader, nullptr);
-  vkDestroyShaderModule(_device, texturedMeshShader, nullptr);
+  vkDestroyShaderModule(_device, texturedShader, nullptr);
+  vkDestroyShaderModule(_device, textShader, nullptr);
 
   _mainDeletionQueue.push_function([=]() {
-    vkDestroyPipeline(_device, texPipeline, nullptr);
+    vkDestroyPipeline(_device, textPipeline, nullptr);
+    vkDestroyPipelineLayout(_device, textPipelineLayout, nullptr);
 
+    vkDestroyPipeline(_device, texturePipeline, nullptr);
     vkDestroyPipelineLayout(_device, texturedPipelineLayout, nullptr);
   });
 }
 
 void VulkanEngine::init_scene() {
   // Create a sampler for the texture
-  auto samplerInfo = vkinit::sampler_create_info(VK_FILTER_NEAREST);
+  auto blockySamplerInfo = vkinit::sampler_create_info(VK_FILTER_NEAREST);
 
   VkSampler blockySampler;
-  vkCreateSampler(_device, &samplerInfo, nullptr, &blockySampler);
+  vkCreateSampler(_device, &blockySamplerInfo, nullptr, &blockySampler);
 
   _mainDeletionQueue.push_function(
       [=]() { vkDestroySampler(_device, blockySampler, nullptr); });
 
+  // Sampler for text
+  auto textSamplerInfo = vkinit::sampler_create_info(VK_FILTER_LINEAR);
+
+  VkSampler textSampler;
+  vkCreateSampler(_device, &textSamplerInfo, nullptr, &textSampler);
+
+  _mainDeletionQueue.push_function(
+      [=]() { vkDestroySampler(_device, textSampler, nullptr); });
+
   Material *terrainMat = get_material("terrain");
   Material *characterMat = get_material("character");
+  Material *textMat = get_material("text");
 
   // Allocate the descriptor set for single-texture to use on the material
   VkDescriptorSetAllocateInfo allocInfo = {};
@@ -642,6 +699,7 @@ void VulkanEngine::init_scene() {
 
   vkAllocateDescriptorSets(_device, &allocInfo, &terrainMat->textureSet);
   vkAllocateDescriptorSets(_device, &allocInfo, &characterMat->textureSet);
+  vkAllocateDescriptorSets(_device, &allocInfo, &textMat->textureSet);
 
   // Write to the descriptor set so that it points to our diffuse texture
   VkDescriptorImageInfo terrainIBI = {
@@ -656,7 +714,7 @@ void VulkanEngine::init_scene() {
 
   vkUpdateDescriptorSets(_device, 1, &terrain_texture, 0, nullptr);
 
-  glm::vec2 gridSize = {100, 100};
+  glm::vec2 gridSize = {50, 50};
   glm::vec2 gridOffset = gridSize / -2.F;
 
   for (size_t i = 0; i != gridSize.x; ++i) {
@@ -692,6 +750,28 @@ void VulkanEngine::init_scene() {
                                 glm::mat4{1.F}, glm::vec3{0.F, 0.F, -5.F})};
 
   _renderables.push_back(character);
+
+  // Write to the descriptor set so that it points to our diffuse texture
+  VkDescriptorImageInfo textIBI = {
+      .sampler = textSampler,
+      .imageView = _loadedTextures["text_msdf"].imageView,
+      .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+  };
+
+  auto text_texture =
+      vkinit::write_descriptor_image(VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                                     textMat->textureSet, &textIBI, 0);
+
+  vkUpdateDescriptorSets(_device, 1, &text_texture, 0, nullptr);
+
+  RenderObject text = {
+      .mesh = get_mesh("text"),
+      .material = get_material("text"),
+      .transformMatrix =
+          glm::scale(glm::translate(glm::mat4{1.F}, glm::vec3{0.F, 3.F, -10.F}),
+                     glm::vec3(10.F))};
+
+  _renderables.push_back(text);
 }
 
 void VulkanEngine::init_descriptors() {
@@ -862,6 +942,7 @@ void VulkanEngine::init_descriptors() {
 void VulkanEngine::load_meshes() {
   Mesh terrain{};
   Mesh character{};
+  Mesh text{};
   {
     utils::Timer timer("Loading mesh took");
 
@@ -870,10 +951,27 @@ void VulkanEngine::load_meshes() {
 
     character.load_from_meshasset("./assets/character/character.mesh");
     upload_mesh(character);
+
+    text._vertices.resize(6);
+    text._vertices[0] = {.position = glm::vec3(1.F, 0.F, 1.F),
+                         .uv = glm::vec2(1.F, 1.F)};
+    text._vertices[1] = {.position = glm::vec3(1.F, 0.F, -1.F),
+                         .uv = glm::vec2(1.F, 0.F)};
+    text._vertices[2] = {.position = glm::vec3(-1.F, 0.F, -1.F),
+                         .uv = glm::vec2(0.F, 0.F)};
+    text._vertices[3] = {.position = glm::vec3(-1.F, 0.F, -1.F),
+                         .uv = glm::vec2(0.F, 0.F)};
+    text._vertices[4] = {.position = glm::vec3(-1.F, 0.F, 1.F),
+                         .uv = glm::vec2(0.F, 1.F)};
+    text._vertices[5] = {.position = glm::vec3(1.F, 0.F, 1.F),
+                         .uv = glm::vec2(1.F, 1.F)};
+
+    upload_mesh(text);
   }
 
   _meshes["terrain"] = terrain;
   _meshes["character"] = character;
+  _meshes["text"] = text;
 }
 
 void VulkanEngine::load_images() {
@@ -911,6 +1009,21 @@ void VulkanEngine::load_images() {
   _mainDeletionQueue.push_function(
       [=]() { vkDestroyImageView(_device, character.imageView, nullptr); });
   _loadedTextures["character_diffuse"] = character;
+
+  Texture text;
+  {
+    utils::Timer timer("Loading asset took");
+    vkutil::load_image_from_asset(*this, "./assets/fonts/Roboto-Regular.tx",
+                                  text.image);
+  }
+
+  auto textImageInfo = vkinit::imageview_create_info(
+      VK_FORMAT_R8G8B8A8_SRGB, text.image._image, VK_IMAGE_ASPECT_COLOR_BIT);
+  vkCreateImageView(_device, &textImageInfo, nullptr, &text.imageView);
+
+  _mainDeletionQueue.push_function(
+      [=]() { vkDestroyImageView(_device, text.imageView, nullptr); });
+  _loadedTextures["text_msdf"] = text;
 }
 
 void VulkanEngine::upload_mesh(Mesh &mesh) {

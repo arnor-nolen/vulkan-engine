@@ -27,7 +27,7 @@ conan install .. -s build_type=Release -if Release --build=missing
 
 After that, the easiest way to build the application is by using VS Code [CMake Tools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools) extension.
 
-## Building manually
+## Building manually (without CMake Tools)
 
 If you're using other editor or don't want to use the CMake Tools extension, you'll have to build the project manually.
 First, use CMake to generate the appropriate build files (replace **Release** with **Debug** if needed):
@@ -69,4 +69,12 @@ If you want to clean up the build files and binaries, you can use `git` from the
 
 ```sh
 git clean -dfX build
+```
+
+## Generating atlas maps
+
+If you ever need to regenerate atlas maps for fonts, you need to use `msdf-atlas-gen`:
+
+```sh
+msdf-atlas-gen.exe -font ./assets/fonts/Roboto-Regular.ttf -format png -imageout ./assets/fonts/Roboto-Regular.png -charset ./assets/fonts/charset.txt -type mtsdf -dimensions 512 512 -pxrange 4
 ```
