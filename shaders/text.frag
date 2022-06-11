@@ -19,6 +19,7 @@ layout(set = 2, binding = 0) uniform sampler2D tex;
 
 // Same as when generating atlas
 float pxRange = 4.F;
+float threshold = 0.5F;
 
 vec4 bgColor = vec4(0.F, 0.F, 0.F, 0.F);
 vec4 fgColor = vec4(1.F, 1.F, 1.F, 1.F);
@@ -36,7 +37,7 @@ float median(float r, float g, float b) {
 void main() {
   vec3 msd = texture(tex, texCoord).rgb;
   float sd = median(msd.r, msd.g, msd.b);
-  float screenPxDistance = screenPxRange() * (sd - .5F);
-  float opacity = clamp(screenPxDistance + .5F, 0.F, 1.F);
+  float screenPxDistance = screenPxRange() * (sd - threshold);
+  float opacity = clamp(screenPxDistance, 0.F, 1.F);
   outFragColor = mix(bgColor, fgColor, opacity);
 }
