@@ -22,7 +22,7 @@ float pxRange = 4.F;
 float threshold = 0.5F;
 float adjustment = 0.F;
 
-vec4 bgColor = vec4(0.F, 0.F, 0.F, 0.F);
+vec4 bgColor = vec4(0.F, 0.F, 0.F, 1.F);
 vec4 fgColor = vec4(1.F, 1.F, 1.F, 1.F);
 
 float screenPxRange() {

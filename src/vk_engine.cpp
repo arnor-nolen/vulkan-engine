@@ -4,6 +4,7 @@
 #include <SDL_vulkan.h>
 #include <glm/gtx/transform.hpp>
 
+#include "vk_fonts.hpp"
 #include "vk_initializers.hpp"
 #include "vk_textures.hpp"
 #include "vk_types.hpp"
@@ -482,7 +483,8 @@ void VulkanEngine::init_sync_structures() {
 void VulkanEngine::init_pipelines() {
   VkShaderModule vertexShader;
   VkShaderModule texturedShader;
-  VkShaderModule textShader;
+  VkShaderModule textVertShader;
+  VkShaderModule textFragShader;
 
   // Compile shaders
   {
@@ -503,12 +505,20 @@ void VulkanEngine::init_pipelines() {
       utils::logger.dump("Textured shader successfully loaded");
     }
 
-    // Compile text shader
-    if (!load_shader_module("./shaders/text.frag.spv", &textShader)) {
-      utils::logger.dump("Error when building the text shader module",
+    // Compile text vert shader
+    if (!load_shader_module("./shaders/text.vert.spv", &textVertShader)) {
+      utils::logger.dump("Error when building the text vertex shader module",
                          spdlog::level::err);
     } else {
-      utils::logger.dump("Text shader successfully loaded");
+      utils::logger.dump("Text vertex shader successfully loaded");
+    }
+
+    // Compile text shader
+    if (!load_shader_module("./shaders/text.frag.spv", &textFragShader)) {
+      utils::logger.dump("Error when building the text fragment shader module",
+                         spdlog::level::err);
+    } else {
+      utils::logger.dump("Text fragment shader successfully loaded");
     }
   }
 
@@ -637,10 +647,10 @@ void VulkanEngine::init_pipelines() {
   pipelineBuilder._shaderStages.clear();
   pipelineBuilder._shaderStages.push_back(
       vkinit::pipeline_shader_stage_create_info(VK_SHADER_STAGE_VERTEX_BIT,
-                                                vertexShader));
+                                                textVertShader));
   pipelineBuilder._shaderStages.push_back(
       vkinit::pipeline_shader_stage_create_info(VK_SHADER_STAGE_FRAGMENT_BIT,
-                                                textShader));
+                                                textFragShader));
 
   VkPipelineLayout textPipelineLayout;
   VK_CHECK(vkCreatePipelineLayout(_device, &text_pipeline_layout_info, nullptr,
@@ -654,7 +664,8 @@ void VulkanEngine::init_pipelines() {
   // Destroy all shader modules, outside of the queue
   vkDestroyShaderModule(_device, vertexShader, nullptr);
   vkDestroyShaderModule(_device, texturedShader, nullptr);
-  vkDestroyShaderModule(_device, textShader, nullptr);
+  vkDestroyShaderModule(_device, textFragShader, nullptr);
+  vkDestroyShaderModule(_device, textVertShader, nullptr);
 
   _mainDeletionQueue.push_function([=]() {
     vkDestroyPipeline(_device, textPipeline, nullptr);
@@ -764,14 +775,38 @@ void VulkanEngine::init_scene() {
 
   vkUpdateDescriptorSets(_device, 1, &text_texture, 0, nullptr);
 
-  RenderObject text = {
-      .mesh = get_mesh("text"),
-      .material = get_material("text"),
-      .transformMatrix =
-          glm::scale(glm::translate(glm::mat4{1.F}, glm::vec3{0.F, 3.F, -10.F}),
-                     glm::vec3(10.F))};
+  // RenderObject text = {
+  //     .mesh = get_mesh("text"),
+  //     .material = get_material("text"),
+  //     .transformMatrix =
+  //         glm::scale(glm::translate(glm::mat4{1.F}, glm::vec3{0.F, 3.F,
+  //         -10.F}),
+  //                    glm::vec3(10.F))};
 
-  _renderables.push_back(text);
+  // _renderables.push_back(text);
+
+  // Load fonts
+  FontInfo fontInfo;
+  fontInfo.load_from_json("./assets/fonts/Roboto-Regular.json");
+
+  const std::string textString = "a";
+  for (auto &&c : textString) {
+    unsigned int unicode = static_cast<unsigned int>(c);
+    auto atlas = fontInfo._glyphs[unicode].atlasBounds.value_or(Bounds{});
+
+    RenderObject textChar = {
+        .mesh = get_mesh("text"),
+        .material = get_material("text"),
+        .transformMatrix = glm::scale(
+            glm::translate(glm::mat4{1.F}, glm::vec3{0.F, 3.F, -10.F}),
+            glm::vec3(10.F))};
+
+    _renderables.push_back(textChar);
+
+    utils::logger.dump(std::format(
+        "Glyph {}, atlasBottom {}, atlasLeft {}, atlasRight {}, atlasTop {}",
+        unicode, atlas.bottom, atlas.left, atlas.right, atlas.top));
+  }
 }
 
 void VulkanEngine::init_descriptors() {

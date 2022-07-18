@@ -151,6 +151,7 @@ target_link_libraries(${PROJECT_NAME}
   tinyobjloader::tinyobjloader 
   msdfgen::msdfgen 
   msdfgen::msdfgen-ext
+  nlohmann_json::nlohmann_json
 )
 
 # Add shaders check
