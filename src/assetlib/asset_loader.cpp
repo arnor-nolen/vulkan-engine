@@ -1,5 +1,6 @@
 #include "asset_loader.hpp"
 #include <fstream>
+#include <cstring>
 
 auto assets::save_binaryfile(const std::filesystem::path &path,
                              const AssetFile &file) -> bool {

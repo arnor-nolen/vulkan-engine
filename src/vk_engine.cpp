@@ -16,7 +16,7 @@
 #include "utils/timer.hpp"
 #include <array>
 #include <cstdint>
-#include <format>
+#include <fmt/core.h>
 #include <fstream>
 #include <numeric>
 
@@ -26,7 +26,7 @@
 constexpr void VK_CHECK(VkResult err) {
   if (err != 0) {
     utils::logger.dump(
-        std::format("Detected Vulkan error: {}", std::to_string(err)),
+        fmt::format("Detected Vulkan error: {}", std::to_string(err)),
         spdlog::level::err);
     abort();
   }
@@ -191,7 +191,7 @@ void VulkanEngine::init_imgui() {
   ImGui_ImplVulkan_DestroyFontUploadObjects();
 
   // Add teh destroy to ImGui created structures
-  _mainDeletionQueue.push_function([=]() {
+  _mainDeletionQueue.push_function([=, this]() {
     vkDestroyDescriptorPool(_device, imguiPool, nullptr);
     ImGui_ImplVulkan_Shutdown();
   });
@@ -272,7 +272,7 @@ void VulkanEngine::init_swapchain() {
 
   VK_CHECK(vkCreateImageView(_device, &dview_info, nullptr, &_depthImageView));
 
-  _mainDeletionQueue.push_function([=]() {
+  _mainDeletionQueue.push_function([=, this]() {
     vkDestroyImageView(_device, _depthImageView, nullptr);
     vmaDestroyImage(_allocator, _depthImage._image, _depthImage._allocation);
     vkDestroyImageView(_device, _colorImageView, nullptr);
@@ -291,7 +291,7 @@ void VulkanEngine::init_commands() {
 
   VK_CHECK(vkCreateCommandPool(_device, &uploadCommandPoolInfo, nullptr,
                                &_uploadContext._commandPool));
-  _mainDeletionQueue.push_function([=]() {
+  _mainDeletionQueue.push_function([=, this]() {
     vkDestroyCommandPool(_device, _uploadContext._commandPool, nullptr);
   });
 
@@ -304,8 +304,9 @@ void VulkanEngine::init_commands() {
     VK_CHECK(vkAllocateCommandBuffers(_device, &cmdAllocInfo,
                                       &frame._mainCommandBuffer));
 
-    _mainDeletionQueue.push_function(
-        [=]() { vkDestroyCommandPool(_device, frame._commandPool, nullptr); });
+    _mainDeletionQueue.push_function([=, this]() {
+      vkDestroyCommandPool(_device, frame._commandPool, nullptr);
+    });
   }
 }
 
@@ -409,7 +410,7 @@ void VulkanEngine::init_default_renderpass() {
       vkCreateRenderPass(_device, &render_pass_info, nullptr, &_renderPass));
 
   _mainDeletionQueue.push_function(
-      [=]() { vkDestroyRenderPass(_device, _renderPass, nullptr); });
+      [=, this]() { vkDestroyRenderPass(_device, _renderPass, nullptr); });
 }
 
 void VulkanEngine::init_framebuffers() {
@@ -438,7 +439,7 @@ void VulkanEngine::init_framebuffers() {
     VK_CHECK(
         vkCreateFramebuffer(_device, &fb_info, nullptr, &_framebuffers[i]));
 
-    _mainDeletionQueue.push_function([=]() {
+    _mainDeletionQueue.push_function([=, this]() {
       vkDestroyFramebuffer(_device, _framebuffers[i], nullptr);
       vkDestroyImageView(_device, _swapchainImageViews[i], nullptr);
     });
@@ -456,8 +457,9 @@ void VulkanEngine::init_sync_structures() {
 
   VK_CHECK(vkCreateFence(_device, &uploadFenceCreateInfo, nullptr,
                          &_uploadContext._uploadFence));
-  _mainDeletionQueue.push_function(
-      [=]() { vkDestroyFence(_device, _uploadContext._uploadFence, nullptr); });
+  _mainDeletionQueue.push_function([=, this]() {
+    vkDestroyFence(_device, _uploadContext._uploadFence, nullptr);
+  });
 
   // For the semaphores we don't need any flags
   auto semaphoreCreateInfo = vkinit::semaphore_create_info();
@@ -466,14 +468,14 @@ void VulkanEngine::init_sync_structures() {
     VK_CHECK(
         vkCreateFence(_device, &fenceCreateInfo, nullptr, &frame._renderFence));
     _mainDeletionQueue.push_function(
-        [=]() { vkDestroyFence(_device, frame._renderFence, nullptr); });
+        [=, this]() { vkDestroyFence(_device, frame._renderFence, nullptr); });
 
     VK_CHECK(vkCreateSemaphore(_device, &semaphoreCreateInfo, nullptr,
                                &frame._presentSemaphore));
     VK_CHECK(vkCreateSemaphore(_device, &semaphoreCreateInfo, nullptr,
                                &frame._renderSemaphore));
 
-    _mainDeletionQueue.push_function([=]() {
+    _mainDeletionQueue.push_function([=, this]() {
       vkDestroySemaphore(_device, frame._presentSemaphore, nullptr);
       vkDestroySemaphore(_device, frame._renderSemaphore, nullptr);
     });
@@ -667,7 +669,7 @@ void VulkanEngine::init_pipelines() {
   vkDestroyShaderModule(_device, textFragShader, nullptr);
   vkDestroyShaderModule(_device, textVertShader, nullptr);
 
-  _mainDeletionQueue.push_function([=]() {
+  _mainDeletionQueue.push_function([=, this]() {
     vkDestroyPipeline(_device, textPipeline, nullptr);
     vkDestroyPipelineLayout(_device, textPipelineLayout, nullptr);
 
@@ -684,7 +686,7 @@ void VulkanEngine::init_scene() {
   vkCreateSampler(_device, &blockySamplerInfo, nullptr, &blockySampler);
 
   _mainDeletionQueue.push_function(
-      [=]() { vkDestroySampler(_device, blockySampler, nullptr); });
+      [=, this]() { vkDestroySampler(_device, blockySampler, nullptr); });
 
   // Sampler for text
   auto textSamplerInfo = vkinit::sampler_create_info(VK_FILTER_LINEAR);
@@ -693,7 +695,7 @@ void VulkanEngine::init_scene() {
   vkCreateSampler(_device, &textSamplerInfo, nullptr, &textSampler);
 
   _mainDeletionQueue.push_function(
-      [=]() { vkDestroySampler(_device, textSampler, nullptr); });
+      [=, this]() { vkDestroySampler(_device, textSampler, nullptr); });
 
   Material *terrainMat = get_material("terrain");
   Material *characterMat = get_material("character");
@@ -803,7 +805,7 @@ void VulkanEngine::init_scene() {
 
     _renderables.push_back(textChar);
 
-    utils::logger.dump(std::format(
+    utils::logger.dump(fmt::format(
         "Glyph {}, atlasBottom {}, atlasLeft {}, atlasRight {}, atlasTop {}",
         unicode, atlas.bottom, atlas.left, atlas.right, atlas.top));
   }
@@ -884,7 +886,7 @@ void VulkanEngine::init_descriptors() {
   vkCreateDescriptorSetLayout(_device, &set3info, nullptr,
                               &_singleTextureSetLayout);
 
-  _mainDeletionQueue.push_function([=]() {
+  _mainDeletionQueue.push_function([=, this]() {
     vkDestroyDescriptorSetLayout(_device, _singleTextureSetLayout, nullptr);
     vkDestroyDescriptorSetLayout(_device, _objectSetLayout, nullptr);
     vkDestroyDescriptorSetLayout(_device, _globalSetLayout, nullptr);
@@ -965,7 +967,7 @@ void VulkanEngine::init_descriptors() {
     vkUpdateDescriptorSets(_device, static_cast<uint32_t>(setWrites.size()),
                            setWrites.data(), 0, nullptr);
 
-    _mainDeletionQueue.push_function([=]() {
+    _mainDeletionQueue.push_function([=, this]() {
       vmaDestroyBuffer(_allocator, frame.cameraBuffer._buffer,
                        frame.cameraBuffer._allocation);
       vmaDestroyBuffer(_allocator, frame.objectBuffer._buffer,
@@ -1023,7 +1025,7 @@ void VulkanEngine::load_images() {
   vkCreateImageView(_device, &terrainImageInfo, nullptr, &terrain.imageView);
 
   _mainDeletionQueue.push_function(
-      [=]() { vkDestroyImageView(_device, terrain.imageView, nullptr); });
+      [=, this]() { vkDestroyImageView(_device, terrain.imageView, nullptr); });
 
   _loadedTextures["terrain_diffuse"] = terrain;
 
@@ -1041,8 +1043,9 @@ void VulkanEngine::load_images() {
   vkCreateImageView(_device, &characterImageInfo, nullptr,
                     &character.imageView);
 
-  _mainDeletionQueue.push_function(
-      [=]() { vkDestroyImageView(_device, character.imageView, nullptr); });
+  _mainDeletionQueue.push_function([=, this]() {
+    vkDestroyImageView(_device, character.imageView, nullptr);
+  });
   _loadedTextures["character_diffuse"] = character;
 
   Texture text;
@@ -1057,7 +1060,7 @@ void VulkanEngine::load_images() {
   vkCreateImageView(_device, &textImageInfo, nullptr, &text.imageView);
 
   _mainDeletionQueue.push_function(
-      [=]() { vkDestroyImageView(_device, text.imageView, nullptr); });
+      [=, this]() { vkDestroyImageView(_device, text.imageView, nullptr); });
   _loadedTextures["text_msdf"] = text;
 }
 
@@ -1117,7 +1120,7 @@ void VulkanEngine::upload_mesh(Mesh &mesh) {
   });
 
   // Add the destruction of triangle mesh buffer to the deletion queue
-  _mainDeletionQueue.push_function([=]() {
+  _mainDeletionQueue.push_function([=, this]() {
     vmaDestroyBuffer(_allocator, mesh._vertexBuffer._buffer,
                      mesh._vertexBuffer._allocation);
   });

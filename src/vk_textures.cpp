@@ -4,7 +4,7 @@
 #include "assetlib/texture_asset.hpp"
 #include "vk_initializers.hpp"
 
-#include "stb_image_implementation.hpp"
+#include "./implementations/stb_image_implementation.hpp"
 
 auto vkutil::load_image_from_file(VulkanEngine &engine,
                                   const std::filesystem::path &file,
@@ -14,7 +14,7 @@ auto vkutil::load_image_from_file(VulkanEngine &engine,
                               &texChannels, STBI_rgb_alpha);
   if (pixels == nullptr) {
     utils::logger.dump(
-        std::format("Failed to load texture file {}", file.string()),
+        fmt::format("Failed to load texture file {}", file.string()),
         spdlog::level::err);
     return false;
   }
@@ -118,7 +118,7 @@ auto vkutil::load_image_from_file(VulkanEngine &engine,
                    stagingBuffer._allocation);
 
   utils::logger.dump(
-      std::format("Texture loaded successfully {}", file.string()));
+      fmt::format("Texture loaded successfully {}", file.string()));
 
   outImage = newImage;
 

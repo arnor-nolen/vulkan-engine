@@ -1,11 +1,11 @@
 #include "../assetlib/mesh_asset.hpp"
 #include "../assetlib/texture_asset.hpp"
-#include "../stb_image_implementation.hpp"
+#include "../implementations/stb_image_implementation.hpp"
+#include "../implementations/tiny_obj_loader_implementation.hpp"
 #include <chrono>
 #include <filesystem>
 #include <iostream>
 #include <span>
-#include <tiny_obj_loader.h>
 #include <vector>
 
 void pack_vertex(assets::Vertex_f32_PNCV &new_vert, tinyobj::real_t vx,

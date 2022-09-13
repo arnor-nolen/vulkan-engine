@@ -1,10 +1,10 @@
 ## Vulkan engine
 
-Simple rendering engine using Vulkan that works cross-platform on Windows, Linux and MacOS. Uses C++20 standard features.
+Simple rendering engine using Vulkan that works cross-platform on Windows, Linux and MacOS. Uses C++20 standard features. Currently, `fmt` library is used instead of `std::format` because it is not as of yet implemented in GCC.
 
 ## Dependencies
 
-Vulkan SDK has to be installed in the system. For the rest of dependencies, I use `conan` package manager to pull them all. This project's dependencies can be seen in [conanfile.py](./conanfile.py).
+**Vulkan SDK** has to be installed in the system. **glslangValidator** usually comes with the Vulkan SDK, but you might need to install it separately (for Arch, use `yay -S glslang-git`). For the rest of dependencies, I use `conan` package manager to pull them all. This project's dependencies can be seen in [conanfile.py](./conanfile.py).
 
 ## How to compile it
 
@@ -21,8 +21,8 @@ Next, we're creating two profiles for Debug and Release:
 ```sh
 cd build
 # We're building missing packages from source
-conan install .. -s build_type=Debug -if Debug --build=missing
-conan install .. -s build_type=Release -if Release --build=missing
+conan install .. -s build_type=Debug -s cppstd=20 -if Debug --build=missing
+conan install .. -s build_type=Release -s cppstd=20 -if Release --build=missing
 ```
 
 After that, the easiest way to build the application is by using VS Code [CMake Tools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools) extension.

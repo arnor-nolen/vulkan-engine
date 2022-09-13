@@ -19,7 +19,7 @@ find_package(Vulkan REQUIRED)
 
 # Setting up dependencies (using CONFIG so find_package doesn't conflict with cmake's own findX.cmake)
 find_package(glm REQUIRED CONFIG)
-find_package(sdl REQUIRED CONFIG)
+find_package(SDL2 REQUIRED CONFIG)
 find_package(imgui REQUIRED CONFIG)
 find_package(stb REQUIRED CONFIG)
 find_package(tinyobjloader REQUIRED CONFIG)
@@ -30,6 +30,7 @@ find_package(lz4 REQUIRED CONFIG)
 find_package(nlohmann_json REQUIRED CONFIG)
 find_package(spdlog REQUIRED CONFIG)
 find_package(msdfgen REQUIRED CONFIG)
+find_package(fmt REQUIRED CONFIG)
 
 
 # Set standard (C++20)
@@ -53,7 +54,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
 
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
-  add_compile_options(-Wall -Wextra -Wpedantic -Wshadow)
+  add_compile_options(-Wall -Wextra -Wpedantic -Wshadow) 
 
 else()
 
@@ -72,7 +73,7 @@ endif()
 file(GLOB_RECURSE SOURCE_FILES "src/bindings/*.cpp")
 add_library(imgui_lib OBJECT ${SOURCE_FILES})
 target_compile_features(imgui_lib PUBLIC ${TARGET_COMPILE_FEATURES})
-target_link_libraries(imgui_lib imgui::imgui SDL2 Vulkan::Headers)
+target_link_libraries(imgui_lib imgui::imgui SDL2::SDL2 Vulkan::Headers)
 # Disable clang-tidy for imgui_lib
 set_target_properties(imgui_lib PROPERTIES CXX_CLANG_TIDY "")
 
@@ -87,7 +88,7 @@ target_link_libraries(asset_lib lz4::lz4 nlohmann_json::nlohmann_json)
 file(GLOB_RECURSE SOURCE_FILES "src/asset-baker/*.cpp")
 add_executable(asset_baker ${SOURCE_FILES})
 target_compile_features(asset_baker PUBLIC ${TARGET_COMPILE_FEATURES})
-target_link_libraries(asset_baker asset_lib stb::stb tinyobjloader::tinyobjloader)
+target_link_libraries(asset_baker asset_lib stb::stb tinyobjloader)
 
 # Build the main app 
 file(GLOB_RECURSE SOURCE_FILES "src/*.cpp")
@@ -145,10 +146,10 @@ target_link_libraries(${PROJECT_NAME}
   Vulkan::Vulkan 
   vulkan-memory-allocator::vulkan-memory-allocator 
   glm::glm 
-  spdlog::spdlog 
+  spdlog::spdlog_header_only
   vk-bootstrap::vk-bootstrap 
   stb::stb 
-  tinyobjloader::tinyobjloader 
+  tinyobjloader 
   msdfgen::msdfgen 
   msdfgen::msdfgen-ext
   nlohmann_json::nlohmann_json

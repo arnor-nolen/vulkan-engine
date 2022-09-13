@@ -1,10 +1,10 @@
 #include "vk_mesh.hpp"
+#include "./implementations/tiny_obj_loader_implementation.hpp"
 #include "assetlib/mesh_asset.hpp"
 #include "utils/logger.hpp"
 #include <array>
 #include <filesystem>
 #include <string_view>
-#include <tiny_obj_loader.h>
 
 auto Vertex::get_vertex_description() -> VertexInputDescription {
   VertexInputDescription description;
@@ -59,7 +59,7 @@ auto Mesh::load_from_meshasset(const std::filesystem::path &filename) -> bool {
 
   if (!loaded) {
     utils::logger.dump(
-        std::format("Error when loading mesh {}", filename.string()),
+        fmt::format("Error when loading mesh {}", filename.string()),
         spdlog::level::err);
     return false;
   }
@@ -134,7 +134,7 @@ auto Mesh::load_from_meshasset(const std::filesystem::path &filename) -> bool {
     }
   }
 
-  utils::logger.dump(std::format("Loaded mesh {}: Verts={}, Tris={}",
+  utils::logger.dump(fmt::format("Loaded mesh {}: Verts={}, Tris={}",
                                  filename.string(), _vertices.size(),
                                  _indices.size() / 3));
 

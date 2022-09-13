@@ -9,7 +9,7 @@ auto load_file(const std::filesystem::path &path) -> std::vector<char> {
   file.seekg(0, std::ios::beg);
   std::vector<char> buffer(size + 1);
   if (!file.read(buffer.data(), size)) {
-    utils::logger.dump(std::format("Error when loading font {}", path.string()),
+    utils::logger.dump(fmt::format("Error when loading font {}", path.string()),
                        spdlog::level::err);
   }
   buffer.back() = '\0';

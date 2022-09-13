@@ -1,6 +1,6 @@
 #include "timer.hpp"
 #include "utils/logger.hpp"
-#include <format>
+#include <fmt/core.h>
 
 namespace utils {
 
@@ -13,7 +13,7 @@ void Timer::stop() {
   auto end_time = std::chrono::steady_clock::now();
   auto duration =
       std::chrono::floor<std::chrono::milliseconds>(end_time - start_time_);
-  logger.dump(std::format("{} {}ms", str_, duration.count()));
+  logger.dump(fmt::format("{} {}ms", str_, duration.count()));
 }
 
 } // namespace utils
