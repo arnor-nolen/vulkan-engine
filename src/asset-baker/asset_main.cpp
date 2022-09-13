@@ -185,7 +185,7 @@ auto main([[maybe_unused]] int argc, [[maybe_unused]] char *argv[]) -> int {
 
   std::cout << "Loading asset directory at " << path << '\n';
 
-  for (auto &&p : std::filesystem::directory_iterator(path)) {
+  for (auto &&p : std::filesystem::recursive_directory_iterator(path)) {
 
     if (p.path().extension() == ".png") {
       std::cout << "File: " << p.path() << " found a texture" << '\n';
