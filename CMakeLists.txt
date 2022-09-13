@@ -29,7 +29,6 @@ find_package(volk REQUIRED CONFIG)
 find_package(lz4 REQUIRED CONFIG)
 find_package(nlohmann_json REQUIRED CONFIG)
 find_package(spdlog REQUIRED CONFIG)
-find_package(msdfgen REQUIRED CONFIG)
 find_package(fmt REQUIRED CONFIG)
 
 
@@ -150,8 +149,6 @@ target_link_libraries(${PROJECT_NAME}
   vk-bootstrap::vk-bootstrap 
   stb::stb 
   tinyobjloader 
-  msdfgen::msdfgen 
-  msdfgen::msdfgen-ext
   nlohmann_json::nlohmann_json
 )
 

@@ -16,7 +16,6 @@ class VulkanTutorialConan(ConanFile):
         "lz4/1.9.3",
         "nlohmann_json/3.11.2",
         "spdlog/1.10.0",  # Any version >= 1.9.0 crashes on MacOS (might be fixed by now, see https://github.com/conan-io/conan-center-index/issues/8480)
-        "msdfgen/1.9.1",
         "fmt/9.1.0",
         # "msdf-atlas-gen/1.2.2",
     )
