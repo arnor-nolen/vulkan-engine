@@ -1,3 +1,6 @@
+# Compiled shaders
+*.spv
+
 # Baked assets
 *.tx
 *.mesh
