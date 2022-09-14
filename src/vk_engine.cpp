@@ -20,7 +20,7 @@
 #include <fstream>
 #include <numeric>
 
-#include "vma_implementation.hpp"
+#include "./implementations/vma_implementation.hpp"
 
 // We want to immediately abort when there is an error
 constexpr void VK_CHECK(VkResult err) {
