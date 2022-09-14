@@ -66,7 +66,9 @@ void VulkanEngine::init() {
   // Everything went fine
   _isInitialized = true;
 
-  _camera = {.position = {0.F, 10.F, 0.F}};
+  _camera = {.position = {0.F, 10.F, 0.F},
+             .velocity = {0.F, 0.F, 0.F},
+             .inputAxis = {0.F, 0.F, 0.F}};
 }
 
 void VulkanEngine::init_vulkan() {
@@ -202,8 +204,10 @@ void VulkanEngine::init_swapchain() {
   vkb::Swapchain vkbSwapchain =
       swapchainBuilder
           .use_default_format_selection()
-          // Use vsync preset mode
-          .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
+          // VSync on
+          // .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
+          // VSync off
+          .set_desired_present_mode(VK_PRESENT_MODE_IMMEDIATE_KHR)
           .set_desired_extent(_windowExtent.width, _windowExtent.height)
           .build()
           .value();
@@ -991,16 +995,28 @@ void VulkanEngine::load_meshes() {
 
     text._vertices.resize(6);
     text._vertices[0] = {.position = glm::vec3(1.F, 0.F, 1.F),
+                         .normal = glm::vec3(0.F),
+                         .color = glm::vec3(0.F),
                          .uv = glm::vec2(1.F, 1.F)};
     text._vertices[1] = {.position = glm::vec3(1.F, 0.F, -1.F),
+                         .normal = glm::vec3(0.F),
+                         .color = glm::vec3(0.F),
                          .uv = glm::vec2(1.F, 0.F)};
     text._vertices[2] = {.position = glm::vec3(-1.F, 0.F, -1.F),
+                         .normal = glm::vec3(0.F),
+                         .color = glm::vec3(0.F),
                          .uv = glm::vec2(0.F, 0.F)};
     text._vertices[3] = {.position = glm::vec3(-1.F, 0.F, -1.F),
+                         .normal = glm::vec3(0.F),
+                         .color = glm::vec3(0.F),
                          .uv = glm::vec2(0.F, 0.F)};
     text._vertices[4] = {.position = glm::vec3(-1.F, 0.F, 1.F),
+                         .normal = glm::vec3(0.F),
+                         .color = glm::vec3(0.F),
                          .uv = glm::vec2(0.F, 1.F)};
     text._vertices[5] = {.position = glm::vec3(1.F, 0.F, 1.F),
+                         .normal = glm::vec3(0.F),
+                         .color = glm::vec3(0.F),
                          .uv = glm::vec2(1.F, 1.F)};
 
     upload_mesh(text);
@@ -1263,7 +1279,8 @@ void VulkanEngine::draw_objects(VkCommandBuffer cmd, RenderObject *first,
       }
     }
 
-    MeshPushConstants constants = {.render_matrix = object.transformMatrix};
+    MeshPushConstants constants = {.data = glm::vec4(0),
+                                   .render_matrix = object.transformMatrix};
 
     // Upload the mesh to the GPU via push constants
     vkCmdPushConstants(cmd, object.material->pipelineLayout,
@@ -1382,9 +1399,6 @@ void VulkanEngine::cleanup() {
 }
 
 void VulkanEngine::draw() {
-
-  ImGui::Render();
-
   // Wait until the GPU has finished rendering the last frame. Timeout of 1
   // second.
   VK_CHECK(vkWaitForFences(_device, 1, &get_current_frame()._renderFence, true,
@@ -1501,17 +1515,25 @@ void VulkanEngine::draw() {
 
 void VulkanEngine::run() {
   SDL_Event e;
-  // bool bQuit = true;
   bool bQuit = false;
 
   auto start = std::chrono::system_clock::now();
   auto end = start;
+  auto render_start = std::chrono::system_clock::now();
+  auto render_end = render_start;
 
   // Main loop
   while (!bQuit) {
+    render_start = std::chrono::system_clock::now();
+
     end = std::chrono::system_clock::now();
     std::chrono::duration<float> elapsed_seconds = end - start;
     auto frametime = elapsed_seconds.count() * 1000.F;
+    // Log if frametime is slow
+    if (frametime > 17) {
+      utils::logger.dump(fmt::format("Frame time: {}ms", frametime),
+                         spdlog::level::warn);
+    }
     start = std::chrono::system_clock::now();
 
     // Handle events on queue
@@ -1536,11 +1558,11 @@ void VulkanEngine::run() {
     // ImGui::ShowDemoWindow();
 
     // Render console window at a fixed position (top-left corner)
-    ImVec2 model_window_pos = ImVec2(0, 0);
-    ImVec2 model_window_size = ImVec2(520, 540);
+    ImVec2 console_window_size = ImVec2(520, 540);
+    ImVec2 console_window_pos = ImVec2(0, 0);
 
-    ImGui::SetNextWindowPos(model_window_pos);
-    ImGui::SetNextWindowSize(model_window_size);
+    ImGui::SetNextWindowPos(console_window_pos);
+    ImGui::SetNextWindowSize(console_window_size);
 
     ImGui::Begin("Console", NULL,
                  ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
@@ -1552,9 +1574,33 @@ void VulkanEngine::run() {
 
     ImGui::End();
 
+    // Render fps window at a fixed position (top-right corner)
+    ImVec2 fps_window_size = ImVec2(50, 50);
+    ImVec2 fps_window_pos = ImVec2(window_w - fps_window_size.x, 0);
+
+    ImGui::SetNextWindowPos(fps_window_pos);
+    ImGui::SetNextWindowSize(fps_window_size);
+    ImGui::Begin("FPS", NULL,
+                 ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse |
+                     ImGuiWindowFlags_NoMove);
+    ImGui::Text(fmt::format("{:.2f}", 1000.F / frametime).c_str());
+
+    ImGui::End();
+    ImGui::Render();
+
     _camera.update_camera(frametime);
 
     draw();
+
+    render_end = std::chrono::system_clock::now();
+    std::chrono::duration<float> render_elapsed = render_end - render_start;
+    auto rendertime = render_elapsed.count() * 1000.F;
+
+    // Cap FPS at 60
+    int sleep_for = std::floor(1000.F / 60.F - rendertime);
+    if (sleep_for > 0) {
+      SDL_Delay(sleep_for);
+    }
   }
 }
 
