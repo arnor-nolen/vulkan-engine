@@ -22,9 +22,9 @@ class VulkanTutorialConan(ConanFile):
         self.requires("imgui/1.89.8")
         self.requires("stb/cci.20210713")
         self.requires("tinyobjloader/1.0.6")
-        self.requires("vk-bootstrap/0.5")
+        self.requires("vk-bootstrap/0.7")
         self.requires("vulkan-memory-allocator/3.0.1")
-        self.requires("volk/1.3.216.0")
+        self.requires("volk/1.3.224.0")
         self.requires("lz4/1.9.3")
         self.requires("nlohmann_json/3.11.2")
         self.requires("spdlog/1.10.0")  # Any version >= 1.9.0 crashes on MacOS (might be fixed by now, see https://github.com/conan-io/conan-center-index/issues/8480)
@@ -39,7 +39,6 @@ class VulkanTutorialConan(ConanFile):
              dst=os.path.join(self.source_folder, "src", "bindings"),
              keep_path=False
         )
-        replace_in_file(self, "./src/bindings/")
 
         copy(self,
              "*vulkan*", 
