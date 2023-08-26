@@ -9,7 +9,7 @@
 #include "vk_textures.hpp"
 #include "vk_types.hpp"
 
-#include "bindings/imgui_impl_sdl.h"
+#include "bindings/imgui_impl_sdl2.h"
 #include "bindings/imgui_impl_vulkan.h"
 #include <VkBootstrap.h>
 

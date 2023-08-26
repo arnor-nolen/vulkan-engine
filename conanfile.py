@@ -1,55 +1,55 @@
-from conans import ConanFile
-
+import os
+from conan import ConanFile
+from conan.tools.files import copy
+from conan.tools.files import replace_in_file
 
 class VulkanTutorialConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
-    requires = (
-        "sdl/2.24.0",
-        "glm/0.9.9.8",
-        "imgui/1.88",
-        "stb/cci.20210713",
-        "tinyobjloader/1.0.6",
-        "vk-bootstrap/0.5",
-        "vulkan-memory-allocator/3.0.1",
-        "vulkan-headers/1.3.224",
-        "volk/1.3.216.0",
-        "lz4/1.9.3",
-        "nlohmann_json/3.11.2",
-        "spdlog/1.10.0",  # Any version >= 1.9.0 crashes on MacOS (might be fixed by now, see https://github.com/conan-io/conan-center-index/issues/8480)
-        "fmt/9.1.0",
-        # "msdf-atlas-gen/1.2.2",
-    )
     generators = "CMakeDeps"
     default_options = {
-        "sdl2:opengl": False,
-        "sdl2:opengles": False,
-        "sdl2:directx": False,
-        "fmt:header_only": True,
-        "spdlog:header_only": True,
+        "sdl/*:opengl": False,
+        "sdl/*:opengles": False,
+        "sdl/*:directx": False,
+        "sdl/*:nas": False,
+        "fmt/*:header_only": True,
+        "spdlog/*:header_only": True,
     }
 
-    def imports(self):
-        # Copy shared libraries
-        self.copy("*.dll", dst="bin", keep_path=False)
-        self.copy("*.dylib", dst="lib", keep_path=False)
-        self.copy("*.so", dst="lib", keep_path=False)
+    def requirements(self):
+        self.requires("vulkan-headers/1.3.224.0", override=True)
+        self.requires("sdl/2.28.2")
+        self.requires("glm/0.9.9.8")
+        self.requires("imgui/1.89.8")
+        self.requires("stb/cci.20210713")
+        self.requires("tinyobjloader/1.0.6")
+        self.requires("vk-bootstrap/0.5")
+        self.requires("vulkan-memory-allocator/3.0.1")
+        self.requires("volk/1.3.216.0")
+        self.requires("lz4/1.9.3")
+        self.requires("nlohmann_json/3.11.2")
+        self.requires("spdlog/1.10.0")  # Any version >= 1.9.0 crashes on MacOS (might be fixed by now, see https://github.com/conan-io/conan-center-index/issues/8480)
+        self.requires("fmt/9.1.0", override=True)
+        # "msdf-atlas-gen/1.2.2",
 
+    def generate(self):
         # Copy ImGui headers
-        self.copy(
-            "imgui_impl_sdl.cpp",
-            dst="../../src/bindings",
-            src="./res/bindings",
+        copy(self,
+             "*sdl2*", 
+             src=os.path.join(self.dependencies["imgui"].package_folder, "res", "bindings"),
+             dst=os.path.join(self.source_folder, "src", "bindings"),
+             keep_path=False
         )
-        self.copy(
-            "imgui_impl_sdl.h", dst="../../src/bindings", src="./res/bindings"
+        replace_in_file(self, "./src/bindings/")
+
+        copy(self,
+             "*vulkan*", 
+             src=os.path.join(self.dependencies["imgui"].package_folder, "res", "bindings"),
+             dst=os.path.join(self.source_folder, "src", "bindings"),
+             keep_path=False
         )
-        self.copy(
-            "imgui_impl_vulkan.cpp",
-            dst="../../src/bindings",
-            src="./res/bindings",
-        )
-        self.copy(
-            "imgui_impl_vulkan.h",
-            dst="../../src/bindings",
-            src="./res/bindings",
-        )
+
+        # Copy shared libraries
+        copy(self, "*.dll", src=".", dst="bin", keep_path=False)
+        copy(self, "*.dylib", src=".", dst="lib", keep_path=False)
+        copy(self, "*.so", src=".", dst="lib", keep_path=False)
+        

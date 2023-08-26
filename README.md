@@ -21,8 +21,8 @@ Next, we're creating two profiles for Debug and Release:
 ```sh
 cd build
 # We're building missing packages from source
-conan install .. -s build_type=Debug -s cppstd=20 -if Debug --build=missing
-conan install .. -s build_type=Release -s cppstd=20 -if Release --build=missing
+conan install .. -s build_type=Debug --output-folder Debug --build=missing
+conan install .. -s build_type=Release --output-folder Release --build=missing
 ```
 
 After that, the easiest way to build the application is by using VS Code [CMake Tools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools) extension.

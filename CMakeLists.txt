@@ -1,5 +1,5 @@
-﻿cmake_minimum_required (VERSION 3.21)
-project (vulkan-engine)
+﻿cmake_minimum_required(VERSION 3.21)
+project(vulkan-engine)
 
 # Additional options
 #
@@ -11,7 +11,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib/$<0:>)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/$<0:>)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/$<0:>)
 
-# Add to find cmake config dependencies 
+# Add to find cmake config dependencies
 list(APPEND CMAKE_PREFIX_PATH ${CMAKE_BINARY_DIR})
 
 # Adding Vulkan SDK
@@ -30,7 +30,6 @@ find_package(lz4 REQUIRED CONFIG)
 find_package(nlohmann_json REQUIRED CONFIG)
 find_package(spdlog REQUIRED CONFIG)
 find_package(fmt REQUIRED CONFIG)
-
 
 # Set standard (C++20)
 set(TARGET_COMPILE_FEATURES cxx_std_20)
@@ -53,7 +52,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang")
 
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
 
-  add_compile_options(-Wall -Wextra -Wpedantic -Wshadow) 
+  add_compile_options(-Wall -Wextra -Wpedantic -Wshadow)
 
 else()
 
@@ -65,7 +64,7 @@ endif()
 # -------------------------------------
 
 # -------------------------------------
-# Building executables 
+# Building executables
 # -------------------------------------
 
 # Build ImGui bindings
@@ -76,7 +75,7 @@ target_link_libraries(imgui_lib imgui::imgui SDL2::SDL2 Vulkan::Headers)
 # Disable clang-tidy for imgui_lib
 set_target_properties(imgui_lib PROPERTIES CXX_CLANG_TIDY "")
 
-# Build asset_lib 
+# Build asset_lib
 # TODO: make asset_lib shared
 file(GLOB_RECURSE SOURCE_FILES "src/assetlib/*.cpp")
 add_library(asset_lib STATIC ${SOURCE_FILES})
@@ -89,31 +88,32 @@ add_executable(asset_baker ${SOURCE_FILES})
 target_compile_features(asset_baker PUBLIC ${TARGET_COMPILE_FEATURES})
 target_link_libraries(asset_baker asset_lib stb::stb tinyobjloader)
 
-# Build the main app 
+# Build the main app
 file(GLOB_RECURSE SOURCE_FILES "src/*.cpp")
 list(FILTER SOURCE_FILES EXCLUDE REGEX "/bindings/")
 list(FILTER SOURCE_FILES EXCLUDE REGEX "/assetlib/")
 list(FILTER SOURCE_FILES EXCLUDE REGEX "/asset-baker/")
-add_executable (${PROJECT_NAME} ${SOURCE_FILES})
+add_executable(${PROJECT_NAME} ${SOURCE_FILES})
 target_compile_features(${PROJECT_NAME} PUBLIC ${TARGET_COMPILE_FEATURES})
 
 # Add src to the include path
 target_include_directories(${PROJECT_NAME} PUBLIC src)
 # -------------------------------------
-# End of building executables 
+# End of building executables
 # -------------------------------------
 
 # -------------------------------------
-# Compiling shaders for Vulkan 
+# Compiling shaders for Vulkan
 # -------------------------------------
-find_program(GLSL_VALIDATOR glslangValidator HINTS /usr/bin /usr/local/bin $ENV{VULKAN_SDK}/Bin/ $ENV{VULKAN_SDK}/Bin32/)
+find_program(
+  GLSL_VALIDATOR glslangValidator HINTS /usr/bin /usr/local/bin $ENV{VULKAN_SDK}/Bin/
+                                        $ENV{VULKAN_SDK}/Bin32/
+)
 
 ## find all the shader files under the shaders folder
-file(GLOB_RECURSE GLSL_SOURCE_FILES
-    "${PROJECT_SOURCE_DIR}/shaders/*.frag"
-    "${PROJECT_SOURCE_DIR}/shaders/*.vert"
-    "${PROJECT_SOURCE_DIR}/shaders/*.comp"
-    )
+file(GLOB_RECURSE GLSL_SOURCE_FILES "${PROJECT_SOURCE_DIR}/shaders/*.frag"
+     "${PROJECT_SOURCE_DIR}/shaders/*.vert" "${PROJECT_SOURCE_DIR}/shaders/*.comp"
+)
 
 ## iterate each shader
 foreach(GLSL ${GLSL_SOURCE_FILES})
@@ -125,30 +125,29 @@ foreach(GLSL ${GLSL_SOURCE_FILES})
   add_custom_command(
     OUTPUT ${SPIRV}
     COMMAND ${GLSL_VALIDATOR} -V ${GLSL} -o ${SPIRV}
-    DEPENDS ${GLSL})
+    DEPENDS ${GLSL}
+  )
   list(APPEND SPIRV_BINARY_FILES ${SPIRV})
 endforeach(GLSL)
 
-add_custom_target(
-    Shaders 
-    DEPENDS ${SPIRV_BINARY_FILES}
-    )
+add_custom_target(Shaders DEPENDS ${SPIRV_BINARY_FILES})
 
 # -------------------------------------
-# End of Compiling shaders for Vulkan 
+# End of Compiling shaders for Vulkan
 # -------------------------------------
 
 # Link libraries
-target_link_libraries(${PROJECT_NAME} 
-  asset_lib 
-  imgui_lib 
-  Vulkan::Vulkan 
-  vulkan-memory-allocator::vulkan-memory-allocator 
-  glm::glm 
+target_link_libraries(
+  ${PROJECT_NAME}
+  asset_lib
+  imgui_lib
+  Vulkan::Vulkan
+  vulkan-memory-allocator::vulkan-memory-allocator
+  glm::glm
   spdlog::spdlog_header_only
-  vk-bootstrap::vk-bootstrap 
-  stb::stb 
-  tinyobjloader 
+  vk-bootstrap::vk-bootstrap
+  stb::stb
+  tinyobjloader
   nlohmann_json::nlohmann_json
 )
 
