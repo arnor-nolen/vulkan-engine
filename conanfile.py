@@ -10,6 +10,7 @@ class VulkanTutorialConan(ConanFile):
         "sdl/*:opengl": False,
         "sdl/*:opengles": False,
         "sdl/*:directx": False,
+        "sdl/*:vulkan": True,
         "sdl/*:nas": False,
         "fmt/*:header_only": True,
         "spdlog/*:header_only": True,
@@ -29,6 +30,8 @@ class VulkanTutorialConan(ConanFile):
         self.requires("nlohmann_json/3.11.2")
         self.requires("spdlog/1.10.0")  # Any version >= 1.9.0 crashes on MacOS (might be fixed by now, see https://github.com/conan-io/conan-center-index/issues/8480)
         self.requires("fmt/9.1.0", override=True)
+        self.requires("wayland/1.22.0", override=True)  # Version 1.21 segfaults
+        self.requires("libxml2/2.11.4", override=True)  # For Wayland
         # "msdf-atlas-gen/1.2.2",
 
     def generate(self):
