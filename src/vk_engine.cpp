@@ -36,7 +36,8 @@ void VulkanEngine::init() {
   // We initialize SDL and create a window with it.
   SDL_Init(SDL_INIT_VIDEO);
 
-  auto window_flags = static_cast<SDL_WindowFlags>(SDL_WINDOW_VULKAN);
+  auto window_flags = static_cast<SDL_WindowFlags>(SDL_WINDOW_VULKAN |
+                                                   SDL_WINDOW_ALLOW_HIGHDPI);
 
   // NOLINTNEXTLINE(hicpp-signed-bitwise)
   _window = SDL_CreateWindow(
@@ -200,6 +201,9 @@ void VulkanEngine::init_imgui() {
 }
 
 void VulkanEngine::init_swapchain() {
+  int width = 0;
+  int height = 0;
+  SDL_GetWindowSizeInPixels(_window, &width, &height);
   vkb::SwapchainBuilder swapchainBuilder{_chosenGPU, _device, _surface};
   vkb::Swapchain vkbSwapchain =
       swapchainBuilder
@@ -208,7 +212,8 @@ void VulkanEngine::init_swapchain() {
           // .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
           // VSync off
           .set_desired_present_mode(VK_PRESENT_MODE_IMMEDIATE_KHR)
-          .set_desired_extent(_windowExtent.width, _windowExtent.height)
+          .set_desired_extent(static_cast<uint32_t>(width),
+                              static_cast<uint32_t>(height))
           .build()
           .value();
 

@@ -17,6 +17,8 @@ class VulkanTutorialConan(ConanFile):
     }
 
     def requirements(self):
+        assert(self.requires is not None)
+
         self.requires("vulkan-headers/1.3.224.0", override=True)
         self.requires("sdl/2.28.2")
         self.requires("glm/0.9.9.8")
@@ -35,6 +37,8 @@ class VulkanTutorialConan(ConanFile):
         # "msdf-atlas-gen/1.2.2",
 
     def generate(self):
+        assert(self.source_folder is not None)
+
         # Copy ImGui headers
         copy(self,
              "*sdl2*", 
@@ -49,6 +53,9 @@ class VulkanTutorialConan(ConanFile):
              dst=os.path.join(self.source_folder, "src", "bindings"),
              keep_path=False
         )
+
+        # Fix HIDPI issue with SDL2 bindings
+        replace_in_file(self, os.path.join(self.source_folder, "src", "bindings", "imgui_impl_sdl2.cpp"), "SDL_GetWindowSize", "SDL_GetWindowSizeInPixels")
 
         # Copy shared libraries
         copy(self, "*.dll", src=".", dst="bin", keep_path=False)
