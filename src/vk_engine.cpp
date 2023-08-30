@@ -36,8 +36,8 @@ void VulkanEngine::init() {
   // We initialize SDL and create a window with it.
   SDL_Init(SDL_INIT_VIDEO);
 
-  auto window_flags = static_cast<SDL_WindowFlags>(SDL_WINDOW_VULKAN |
-                                                   SDL_WINDOW_ALLOW_HIGHDPI);
+  auto window_flags = static_cast<SDL_WindowFlags>(
+      SDL_WINDOW_VULKAN | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE);
 
   // NOLINTNEXTLINE(hicpp-signed-bitwise)
   _window = SDL_CreateWindow(
@@ -46,6 +46,11 @@ void VulkanEngine::init() {
       // NOLINTNEXTLINE(hicpp-signed-bitwise)
       SDL_WINDOWPOS_UNDEFINED, static_cast<int>(_windowExtent.width),
       static_cast<int>(_windowExtent.height), window_flags);
+
+  int width = 0;
+  int height = 0;
+  SDL_GetWindowSizeInPixels(_window, &width, &height);
+  _windowExtent = {static_cast<uint32_t>(width), static_cast<uint32_t>(height)};
 
   // Trap mouse inside the window
   SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -201,9 +206,6 @@ void VulkanEngine::init_imgui() {
 }
 
 void VulkanEngine::init_swapchain() {
-  int width = 0;
-  int height = 0;
-  SDL_GetWindowSizeInPixels(_window, &width, &height);
   vkb::SwapchainBuilder swapchainBuilder{_chosenGPU, _device, _surface};
   vkb::Swapchain vkbSwapchain =
       swapchainBuilder
@@ -212,8 +214,7 @@ void VulkanEngine::init_swapchain() {
           // .set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR)
           // VSync off
           .set_desired_present_mode(VK_PRESENT_MODE_IMMEDIATE_KHR)
-          .set_desired_extent(static_cast<uint32_t>(width),
-                              static_cast<uint32_t>(height))
+          .set_desired_extent(_windowExtent.width, _windowExtent.height)
           .build()
           .value();
 
@@ -1406,8 +1407,8 @@ void VulkanEngine::cleanup() {
 void VulkanEngine::draw() {
   // Wait until the GPU has finished rendering the last frame. Timeout of 1
   // second.
-  VK_CHECK(vkWaitForFences(_device, 1, &get_current_frame()._renderFence, true,
-                           1000000000));
+  VK_CHECK(vkWaitForFences(_device, 1, &get_current_frame()._renderFence,
+                           VK_TRUE, 1000000000));
   VK_CHECK(vkResetFences(_device, 1, &get_current_frame()._renderFence));
 
   // Now that we are sure that the commands finished executing, we can
