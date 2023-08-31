@@ -8,13 +8,7 @@ Simple rendering engine using Vulkan that works cross-platform on Windows, Linux
 
 ## How to compile it
 
-To compile the project, first you'll need to install `conan` to manage the dependencies:
-
-```sh
-pip install conan
-```
-
-If you don't have `pip` installed, refer to [this](https://docs.conan.io/en/latest/installation.html) `conan` installation guide.
+To compile the project, first you'll need to install `conan` to manage the dependencies. To install it, please refer to [this](https://docs.conan.io/en/latest/installation.html) `conan` installation guide.
 
 Next, we're installing dependencies (replace **Debug** with **Release** if needed):
 
@@ -25,19 +19,18 @@ conan install . -s build_type=Debug --build=missing
 
 ## Building with CMake
 
-First, use CMake to generate the appropriate build files (replace **Debug** with **Release** if needed):
-
+You can use a workflow preset to build the project:
 ```sh
-cmake --preset debug
+cmake --workflow --preset debug
 ```
 
-Using generated files, you can compile the project:
-
+Or you can do the same thing in two separate commands:
 ```sh
-cmake --build --preset debug
+cmake --preset debug # Configure
+cmake --build --preset debug # Build
 ```
 
-Now, enjoy your freshly minted binaries inside the **bin** folder!
+Now, enjoy your freshly minted binaries inside the **build/Debug/bin** folder!
 
 ## Baking assets
 
@@ -48,20 +41,20 @@ To load assets quicker, engine uses asset baking. Before launching it, you need 
 ./build/Release/bin/asset_baker ./assets/
 ```
 
-## Launching the app
+## Starting the engine
 
 Internal code uses relative paths for loading models and shaders, so make sure that your working directory is the project root. Here's an example of how you can run the binaries:
 
 ```sh
-./build/Release/bin/vulkan-engine
+./build/Debug/bin/vulkan-engine
 ```
 
 ## Cleaning up build files
 
-If you want to clean up the build files and binaries, you can use `git` from the project root directory:
+If you want to clean up the build files and binaries, you can just remove build folder:
 
 ```sh
-git clean -dfX build
+rm -r build
 ```
 
 ## Generating atlas maps

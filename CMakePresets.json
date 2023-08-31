@@ -1,46 +1,81 @@
 {
-  "version": 6,
-  "cmakeMinimumRequired": {
-    "major": 3,
-    "minor": 23,
-    "patch": 0
-  },
-  "include": ["./ConanPresets.json"],
-  "configurePresets": [
-    {
-      "name": "debug",
-      "displayName": "debug",
-      "description": "Debug config",
-      "inherits": "conan-debug",
-      "binaryDir": "${sourceDir}/build/Debug",
-      "generator": "Ninja",
-      "cacheVariables": {
-        "CMAKE_EXPORT_COMPILE_COMMANDS": {
-          "type": "BOOL",
-          "value": "ON"
-        }
-      }
-    }
-  ],
-  "buildPresets": [
-    {
-      "name": "debug",
-      "configurePreset": "debug"
-    }
-  ],
-  "workflowPresets": [
-    {
-      "name": "debug",
-      "steps": [
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 23,
+        "patch": 0
+    },
+    "include": ["./ConanPresets.json"],
+    "configurePresets": [
         {
-          "type": "configure",
-          "name": "debug"
+            "name": "debug",
+            "displayName": "debug",
+            "description": "Debug config",
+            "inherits": "conan-debug",
+            "binaryDir": "${sourceDir}/build/Debug",
+            "cacheVariables": {
+                "CMAKE_EXPORT_COMPILE_COMMANDS": {
+                    "type": "BOOL",
+                    "value": "ON"
+                },
+                "CMAKE_COLOR_DIAGNOSTICS": {
+                    "type": "BOOL",
+                    "value": "ON"
+                }
+            },
+            "warnings": {
+                "unusedCli": false
+            }
         },
         {
-          "type": "build",
-          "name": "debug"
+            "name": "release",
+            "displayName": "release",
+            "description": "Release config",
+            "inherits": "conan-release",
+            "binaryDir": "${sourceDir}/build/Release",
+            "cacheVariables": {
+            },
+            "warnings": {
+                "unusedCli": false
+            }
         }
-      ]
-    }
-  ]
+    ],
+    "buildPresets": [
+        {
+            "name": "debug",
+            "configurePreset": "debug"
+        },
+        {
+            "name": "release",
+            "configurePreset": "release"
+        }
+    ],
+    "workflowPresets": [
+        {
+            "name": "debug",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "debug"
+                },
+                {
+                    "type": "build",
+                    "name": "debug"
+                }
+            ]
+        },
+        {
+            "name": "release",
+            "steps": [
+                {
+                    "type": "configure",
+                    "name": "release"
+                },
+                {
+                    "type": "build",
+                    "name": "release"
+                }
+            ]
+        }
+    ]
 }
