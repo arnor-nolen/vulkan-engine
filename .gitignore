@@ -1,3 +1,7 @@
+# CMake presets
+CMakeUserPresets.json
+ConanPresets.json
+
 # Build folder
 build
 

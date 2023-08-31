@@ -2,6 +2,7 @@ import os
 from conan import ConanFile
 from conan.tools.files import copy
 from conan.tools.files import replace_in_file
+from conan.tools.cmake import cmake_layout, CMakeToolchain
 
 class VulkanTutorialConan(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
@@ -61,4 +62,11 @@ class VulkanTutorialConan(ConanFile):
         copy(self, "*.dll", src=".", dst="bin", keep_path=False)
         copy(self, "*.dylib", src=".", dst="lib", keep_path=False)
         copy(self, "*.so", src=".", dst="lib", keep_path=False)
+
+        # Configure CMakeToolchain
+        tc = CMakeToolchain(self)
+        tc.user_presets_path = "ConanPresets.json"
+        tc.generate()
         
+    def layout(self):
+        cmake_layout(self)

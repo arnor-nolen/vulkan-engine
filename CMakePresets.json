@@ -5,17 +5,16 @@
     "minor": 23,
     "patch": 0
   },
+  "include": ["./ConanPresets.json"],
   "configurePresets": [
     {
       "name": "debug",
-      "displayName": "Linux Config",
-      "description": "Linux",
-      "binaryDir": "${sourceDir}/build",
+      "displayName": "debug",
+      "description": "Debug config",
+      "inherits": "conan-debug",
+      "binaryDir": "${sourceDir}/build/Debug",
       "generator": "Ninja",
       "cacheVariables": {
-        "CMAKE_BUILD_TYPE": {
-          "value": "Debug"
-        },
         "CMAKE_EXPORT_COMPILE_COMMANDS": {
           "type": "BOOL",
           "value": "ON"
