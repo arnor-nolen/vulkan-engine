@@ -19,28 +19,22 @@ If you don't have `pip` installed, refer to [this](https://docs.conan.io/en/late
 Next, we're installing dependencies (replace **Debug** with **Release** if needed):
 
 ```sh
-cd build
 # We're building missing packages from source
-conan install .. -s build_type=Debug --output-folder . --build=missing
+conan install . -s build_type=Debug --build=missing
 ```
 
-After that, the easiest way to build the application is by using VS Code [CMake Tools](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools) extension.
+## Building with CMake
 
-## Building manually (without CMake Tools)
-
-If you're using other editor or don't want to use the CMake Tools extension, you'll have to build the project manually.
 First, use CMake to generate the appropriate build files (replace **Debug** with **Release** if needed):
 
 ```sh
-cd Release
-cmake ../.. -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+cmake --preset debug
 ```
 
 Using generated files, you can compile the project:
 
 ```sh
-cmake --build . # For MacOS/Linux
-cmake --build . --config Debug # For Windows you have to specify build type
+cmake --build --preset debug
 ```
 
 Now, enjoy your freshly minted binaries inside the **bin** folder!
