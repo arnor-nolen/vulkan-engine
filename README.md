@@ -10,24 +10,24 @@ Simple rendering engine using Vulkan that works cross-platform on Windows, Linux
 
 To compile the project, first you'll need to install `conan` to manage the dependencies. To install it, please refer to [this](https://docs.conan.io/en/latest/installation.html) `conan` installation guide.
 
-Next, we're installing dependencies (replace **Debug** with **Release** if needed):
+Next, we're installing dependencies (replace **Release** with **Debug** if needed):
 
 ```sh
 # We're building missing packages from source
-conan install . -s build_type=Debug --build=missing
+conan install . -s build_type=Release --build=missing
 ```
 
 ## Building with CMake
 
 You can use a workflow preset to build the project:
 ```sh
-cmake --workflow --preset debug
+cmake --workflow --preset release
 ```
 
 Or you can do the same thing in two separate commands:
 ```sh
-cmake --preset debug # Configure
-cmake --build --preset debug # Build
+cmake --preset release # Configure
+cmake --build --preset release # Build
 ```
 
 Now, enjoy your freshly minted binaries inside the **build/Debug/bin** folder!
