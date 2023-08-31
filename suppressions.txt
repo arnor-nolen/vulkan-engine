@@ -1,3 +1,4 @@
 missingIncludeSystem
 unusedFunction
 unmatchedSuppression
+*:src/bindings/*
