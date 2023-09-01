@@ -1,4 +1,4 @@
-﻿#include "vk_engine.hpp"
+#include "vk_engine.hpp"
 
 #include <SDL.h>
 #include <SDL_vulkan.h>
