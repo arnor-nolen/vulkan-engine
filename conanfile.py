@@ -14,6 +14,8 @@ class VulkanTutorialConan(ConanFile):
         "sdl/*:directx": False,
         "sdl/*:vulkan": True,
         "sdl/*:nas": False,
+        "sdl/*:pulse": False,
+        "sdl/*:alsa": False,
         "fmt/*:header_only": True,
         "spdlog/*:header_only": True,
     }
